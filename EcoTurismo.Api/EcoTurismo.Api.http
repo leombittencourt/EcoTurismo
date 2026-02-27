@@ -1,0 +1,6 @@
+@EcoTurismo.Api_HostAddress = http://localhost:5226
+
+GET {{EcoTurismo.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

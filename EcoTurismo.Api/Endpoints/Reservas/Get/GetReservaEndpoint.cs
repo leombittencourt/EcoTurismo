@@ -1,3 +1,4 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Application.Interfaces;
 using FastEndpoints;
@@ -13,7 +14,7 @@ public class GetReservaEndpoint : Endpoint<GetReservaRequest, ReservaDto>
     public override void Configure()
     {
         Get("/api/reservas/{Id}");
-        AllowAnonymous();
+        Policies(RolePolicies.AnyAuthenticatedPolicy); // Qualquer usuário autenticado pode ver detalhes
     }
 
     public override async Task HandleAsync(GetReservaRequest req, CancellationToken ct)

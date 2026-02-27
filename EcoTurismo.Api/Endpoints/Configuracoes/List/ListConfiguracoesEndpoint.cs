@@ -1,3 +1,4 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
@@ -14,7 +15,7 @@ public class ListConfiguracoesEndpoint : EndpointWithoutRequest<List<Configuraca
     public override void Configure()
     {
         Get("/api/configuracoes");
-        AllowAnonymous();
+        Policies(RolePolicies.AdminOrPrefeituraPolicy); // Apenas Admin ou Prefeitura podem ver configurações
     }
 
     public override async Task HandleAsync(CancellationToken ct)

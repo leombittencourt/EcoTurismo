@@ -1,6 +1,6 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Application.Interfaces;
 using FastEndpoints;
-using AuthDomain = EcoTurismo.Domain.Authorization;
 
 namespace EcoTurismo.Api.Endpoints.Reservas;
 
@@ -13,7 +13,7 @@ public class UpdateReservaStatusEndpoint : Endpoint<UpdateReservaStatusRequest>
     public override void Configure()
     {
         Put("/api/reservas/{Id}/status");
-        Permissions(AuthDomain.Permissions.ReservasUpdate);
+        Policies(RolePolicies.AdminOrPrefeituraPolicy); // Admin ou Prefeitura podem alterar status
     }
 
     public override async Task HandleAsync(UpdateReservaStatusRequest req, CancellationToken ct)

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace EcoTurismo.Domain.Entities;
 
 public class Municipio
@@ -8,7 +10,10 @@ public class Municipio
     public string? Logo { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
-    // Navigation
+    // Navigation (ignorar para evitar ciclos)
+    [JsonIgnore]
     public ICollection<Atrativo> Atrativos { get; set; } = new List<Atrativo>();
-    public ICollection<Profile> Profiles { get; set; } = new List<Profile>();
+
+    [JsonIgnore]
+    public ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();
 }

@@ -3,4 +3,5 @@
   <Project Path="EcoTurismo.Application/EcoTurismo.Application.csproj" />
   <Project Path="EcoTurismo.Domain/EcoTurismo.Domain.csproj" />
   <Project Path="EcoTurismo.Infra/EcoTurismo.Infra.csproj" />
+  <Project Path="EcoTurismo.Tests/EcoTurismo.Tests.csproj" />
 </Solution>

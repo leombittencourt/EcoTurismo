@@ -1,7 +1,7 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
-using AuthDomain = EcoTurismo.Domain.Authorization;
 
 namespace EcoTurismo.Api.Endpoints.Atrativos;
 
@@ -14,7 +14,7 @@ public class UpdateAtrativoEndpoint : Endpoint<UpdateAtrativoRequest, AtrativoDt
     public override void Configure()
     {
         Put("/api/atrativos/{Id}");
-        Permissions(AuthDomain.Permissions.AtrativosUpdate);
+        Policies(RolePolicies.AdminOrPrefeituraPolicy);
     }
 
     public override async Task HandleAsync(UpdateAtrativoRequest req, CancellationToken ct)

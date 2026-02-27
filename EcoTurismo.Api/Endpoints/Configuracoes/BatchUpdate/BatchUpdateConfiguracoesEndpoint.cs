@@ -1,7 +1,7 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
-using AuthDomain = EcoTurismo.Domain.Authorization;
 
 namespace EcoTurismo.Api.Endpoints.Configuracoes;
 
@@ -14,7 +14,7 @@ public class BatchUpdateConfiguracoesEndpoint : Endpoint<BatchUpdateConfiguracoe
     public override void Configure()
     {
         Put("/api/configuracoes");
-        Permissions(AuthDomain.Permissions.ConfiguracoesUpdate);
+        Policies(RolePolicies.AdminPolicy); // Apenas Admin pode alterar configurações
     }
 
     public override async Task HandleAsync(BatchUpdateConfiguracoesRequest req, CancellationToken ct)

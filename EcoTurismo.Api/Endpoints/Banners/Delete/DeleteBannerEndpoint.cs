@@ -1,6 +1,6 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
-using AuthDomain = EcoTurismo.Domain.Authorization;
 
 namespace EcoTurismo.Api.Endpoints.Banners;
 
@@ -13,7 +13,7 @@ public class DeleteBannerEndpoint : Endpoint<DeleteBannerRequest>
     public override void Configure()
     {
         Delete("/api/banners/{Id}");
-        Permissions(AuthDomain.Permissions.BannersDelete);
+        Policies(RolePolicies.AdminPolicy);
     }
 
     public override async Task HandleAsync(DeleteBannerRequest req, CancellationToken ct)

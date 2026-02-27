@@ -1,15 +1,21 @@
 using EcoTurismo.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace EcoTurismo.Infra.Data.Seeds;
 
 public static class AuthorizationSeed
 {
     public static async Task SeedAsync(EcoTurismoDbContext context)
-    {
+    {        
         // Verifica se já tem dados
         if (await context.Roles.AnyAsync())
+        {
+            Console.WriteLine("ℹ️  Seed ignorado: Dados já existem no banco.");
             return;
+        }
+
+        Console.WriteLine("🌱 Iniciando seed de dados iniciais...");
 
         var now = DateTimeOffset.UtcNow;
 
@@ -106,6 +112,7 @@ public static class AuthorizationSeed
 
         await context.Permissions.AddRangeAsync(permissions);
         await context.SaveChangesAsync();
+        Console.WriteLine("   ✅ 26 Permissions criadas");
 
         // 3. Associar Permissions às Roles
         var rolePermissions = new List<RolePermission>();
@@ -180,6 +187,105 @@ public static class AuthorizationSeed
         }
 
         await context.RolePermissions.AddRangeAsync(rolePermissions);
+        await context.SaveChangesAsync();
+
+        // 4. Criar Município Base
+        var municipioBase = new Municipio
+        {
+            Id = Guid.NewGuid(),
+            Nome = "Rio Verde de Mato Grosso",
+            Uf = "MS",
+            Logo = null,
+            CreatedAt = now
+        };
+
+        await context.Municipios.AddAsync(municipioBase);
+        await context.SaveChangesAsync();
+        Console.WriteLine($"   ✅ Município base criado: {municipioBase.Nome} - {municipioBase.Uf}");
+
+        // 4.1. Criar Atrativo Inicial
+        var atrativoInicial = new Atrativo
+        {
+            Id = Guid.NewGuid(),
+            Nome = "Balneário Municipal",
+            Tipo = "balneario",
+            Descricao = "O Balneário Municipal de Rio Verde de Mato Grosso é um dos principais atrativos turísticos da região. Com águas cristalinas e infraestrutura completa, oferece lazer e diversão para toda a família. O local conta com piscinas naturais, áreas de camping, quiosques e playground.",
+            MunicipioId = municipioBase.Id,
+            Imagem = "https://via.placeholder.com/800x600?text=Balneario+Municipal",
+            Status = "ativo",
+            CapacidadeMaxima = 500,
+            OcupacaoAtual = 0,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        await context.Atrativos.AddAsync(atrativoInicial);
+        await context.SaveChangesAsync();
+        Console.WriteLine($"   ✅ Atrativo inicial criado: {atrativoInicial.Nome}");
+
+        // 5. Criar Usuários Default (senha: admin123)
+        Console.WriteLine("   🔐 Gerando hash de senha para usuários default...");
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword("admin123");
+        Console.WriteLine($"   ✅ Hash gerado: {passwordHash.Substring(0, 20)}...");
+
+        var usuarios = new[]
+        {
+            new Usuario
+            {
+                Id = Guid.NewGuid(),
+                Nome = "Administrador do Sistema",
+                Email = "admin@ecoturismo.com.br",
+                PasswordHash = passwordHash,
+                RoleId = adminRole.Id,
+                MunicipioId = municipioBase.Id,
+                Telefone = "(67) 3000-0001",
+                Ativo = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            new Usuario
+            {
+                Id = Guid.NewGuid(),
+                Nome = "Prefeitura Rio Verde",
+                Email = "prefeitura@ecoturismo.com.br",
+                PasswordHash = passwordHash,
+                RoleId = prefeituraRole.Id,
+                MunicipioId = municipioBase.Id,
+                Telefone = "(67) 3000-0002",
+                Ativo = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            new Usuario
+            {
+                Id = Guid.NewGuid(),
+                Nome = "Balneário Municipal",
+                Email = "balneario@ecoturismo.com.br",
+                PasswordHash = passwordHash,
+                RoleId = balnearioRole.Id,
+                MunicipioId = municipioBase.Id,
+                AtrativoId = atrativoInicial.Id, // Vinculado ao Balneário Municipal
+                Telefone = "(67) 3000-0003",
+                Ativo = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            new Usuario
+            {
+                Id = Guid.NewGuid(),
+                Nome = "Usuário Público",
+                Email = "publico@ecoturismo.com.br",
+                PasswordHash = passwordHash,
+                RoleId = publicoRole.Id,
+                MunicipioId = municipioBase.Id,
+                Telefone = "(67) 3000-0004",
+                Ativo = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            }
+        };
+
+        await context.Usuarios.AddRangeAsync(usuarios);
         await context.SaveChangesAsync();
     }
 }

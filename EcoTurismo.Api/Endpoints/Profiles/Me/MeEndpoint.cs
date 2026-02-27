@@ -1,3 +1,4 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,9 @@ public class MeEndpoint : EndpointWithoutRequest<MeResponse>
     public override void Configure()
     {
         Get("/api/profiles/me");
+
+        // Qualquer usuário autenticado pode ver seu próprio perfil
+        Policies(RolePolicies.AnyAuthenticatedPolicy);
     }
 
     public override async Task HandleAsync(CancellationToken ct)
@@ -26,24 +30,42 @@ public class MeEndpoint : EndpointWithoutRequest<MeResponse>
             return;
         }
 
-        var profile = await _db.Profiles
-            .Include(p => p.Role)
-            .FirstOrDefaultAsync(p => p.Id == Guid.Parse(userId), ct);
+        // Buscar usuário SEM includes (evitar navegações)
+        var usuario = await _db.Usuarios
+            .AsNoTracking()
+            .Where(u => u.Id == Guid.Parse(userId))
+            .Select(u => new
+            {
+                u.Id,
+                u.Nome,
+                u.Email,
+                u.RoleId,
+                u.MunicipioId,
+                u.AtrativoId
+            })
+            .FirstOrDefaultAsync(ct);
 
-        if (profile is null)
+        if (usuario is null)
         {
             await Send.NotFoundAsync(ct);
             return;
         }
 
+        // Buscar nome da role separadamente
+        var roleName = await _db.Roles
+            .AsNoTracking()
+            .Where(r => r.Id == usuario.RoleId)
+            .Select(r => r.Name)
+            .FirstOrDefaultAsync(ct);
+
         await Send.OkAsync(new MeResponse
         {
-            Id = profile.Id,
-            Nome = profile.Nome,
-            Email = profile.Email,
-            Role = profile.Role.Name,
-            MunicipioId = profile.MunicipioId,
-            AtrativoId = profile.AtrativoId
+            Id = usuario.Id,
+            Nome = usuario.Nome,
+            Email = usuario.Email,
+            Role = roleName ?? "Unknown",
+            MunicipioId = usuario.MunicipioId,
+            AtrativoId = usuario.AtrativoId
         }, ct);
     }
 }

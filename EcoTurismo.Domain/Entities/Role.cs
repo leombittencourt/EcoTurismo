@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace EcoTurismo.Domain.Entities;
 
 public class Role
@@ -10,7 +12,10 @@ public class Role
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 
-    // Navigation
-    public ICollection<Profile> Profiles { get; set; } = new List<Profile>();
+    // Navigation (ignorar para evitar ciclos)
+    [JsonIgnore]
+    public ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();
+
+    [JsonIgnore]
     public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
 }

@@ -9,7 +9,7 @@ public class EcoTurismoDbContext : DbContext
         : base(options) { }
 
     public DbSet<Municipio> Municipios => Set<Municipio>();
-    public DbSet<Profile> Profiles => Set<Profile>();
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Atrativo> Atrativos => Set<Atrativo>();
     public DbSet<Reserva> Reservas => Set<Reserva>();
     public DbSet<Validacao> Validacoes => Set<Validacao>();

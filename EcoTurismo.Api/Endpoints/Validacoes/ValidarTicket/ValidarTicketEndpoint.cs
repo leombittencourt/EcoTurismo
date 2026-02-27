@@ -1,3 +1,4 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Application.Interfaces;
 using FastEndpoints;
@@ -14,7 +15,7 @@ public class ValidarTicketEndpoint : Endpoint<ValidarTicketRequest, ValidarTicke
     public override void Configure()
     {
         Post("/api/validacoes");
-        AllowAnonymous();
+        Policies(RolePolicies.AdminOrBalnearioPolicy); // Apenas Admin ou Balneário podem validar tickets
     }
 
     public override async Task HandleAsync(ValidarTicketRequest req, CancellationToken ct)

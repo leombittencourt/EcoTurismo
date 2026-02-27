@@ -42,9 +42,9 @@ public class MunicipioConfiguration : IEntityTypeConfiguration<Municipio>
             .HasForeignKey(a => a.MunicipioId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(m => m.Profiles)
-            .WithOne(p => p.Municipio)
-            .HasForeignKey(p => p.MunicipioId)
+        builder.HasMany(m => m.Usuarios)
+            .WithOne(u => u.Municipio)
+            .HasForeignKey(u => u.MunicipioId)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

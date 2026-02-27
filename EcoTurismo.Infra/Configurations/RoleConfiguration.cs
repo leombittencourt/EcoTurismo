@@ -52,9 +52,9 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
             .IsUnique();
 
         // Relationships
-        builder.HasMany(r => r.Profiles)
-            .WithOne(p => p.Role)
-            .HasForeignKey(p => p.RoleId)
+        builder.HasMany(r => r.Usuarios)
+            .WithOne(u => u.Role)
+            .HasForeignKey(u => u.RoleId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(r => r.RolePermissions)

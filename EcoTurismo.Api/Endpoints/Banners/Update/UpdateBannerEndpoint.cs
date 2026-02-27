@@ -1,7 +1,7 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
-using AuthDomain = EcoTurismo.Domain.Authorization;
 
 namespace EcoTurismo.Api.Endpoints.Banners;
 
@@ -14,7 +14,7 @@ public class UpdateBannerEndpoint : Endpoint<UpdateBannerRequest, BannerDto>
     public override void Configure()
     {
         Put("/api/banners/{Id}");
-        Permissions(AuthDomain.Permissions.BannersUpdate);
+        Policies(RolePolicies.AdminOrPrefeituraPolicy);
     }
 
     public override async Task HandleAsync(UpdateBannerRequest req, CancellationToken ct)

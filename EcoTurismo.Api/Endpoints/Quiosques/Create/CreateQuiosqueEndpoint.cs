@@ -1,7 +1,7 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Application.Interfaces;
 using FastEndpoints;
-using AuthDomain = EcoTurismo.Domain.Authorization;
 
 namespace EcoTurismo.Api.Endpoints.Quiosques;
 
@@ -14,7 +14,7 @@ public class CreateQuiosqueEndpoint : Endpoint<CreateQuiosqueRequest, QuiosqueDt
     public override void Configure()
     {
         Post("/api/quiosques");
-        Permissions(AuthDomain.Permissions.QuiosquesCreate);
+        Policies(RolePolicies.AdminOrPrefeituraPolicy);
     }
 
     public override async Task HandleAsync(CreateQuiosqueRequest req, CancellationToken ct)

@@ -1,6 +1,6 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Application.Interfaces;
 using FastEndpoints;
-using AuthDomain = EcoTurismo.Domain.Authorization;
 
 namespace EcoTurismo.Api.Endpoints.Quiosques;
 
@@ -13,7 +13,7 @@ public class DeleteQuiosqueEndpoint : Endpoint<DeleteQuiosqueRequest>
     public override void Configure()
     {
         Delete("/api/quiosques/{Id}");
-        Permissions(AuthDomain.Permissions.QuiosquesDelete);
+        Policies(RolePolicies.AdminPolicy); // Apenas Admin pode deletar quiosques
     }
 
     public override async Task HandleAsync(DeleteQuiosqueRequest req, CancellationToken ct)

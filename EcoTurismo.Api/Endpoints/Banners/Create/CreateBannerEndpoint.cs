@@ -1,9 +1,9 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Domain.Entities;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
-using AuthDomain = EcoTurismo.Domain.Authorization;
 
 namespace EcoTurismo.Api.Endpoints.Banners;
 
@@ -16,7 +16,7 @@ public class CreateBannerEndpoint : Endpoint<CreateBannerRequest, BannerDto>
     public override void Configure()
     {
         Post("/api/banners");
-        Permissions(AuthDomain.Permissions.BannersCreate);
+        Policies(RolePolicies.AdminOrPrefeituraPolicy);
     }
 
     public override async Task HandleAsync(CreateBannerRequest req, CancellationToken ct)

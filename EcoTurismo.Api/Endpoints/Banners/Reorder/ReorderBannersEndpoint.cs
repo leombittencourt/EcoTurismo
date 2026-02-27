@@ -1,6 +1,6 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
-using AuthDomain = EcoTurismo.Domain.Authorization;
 
 namespace EcoTurismo.Api.Endpoints.Banners;
 
@@ -13,7 +13,7 @@ public class ReorderBannersEndpoint : Endpoint<ReorderBannersRequest>
     public override void Configure()
     {
         Put("/api/banners/reorder");
-        Permissions(AuthDomain.Permissions.BannersReorder);
+        Policies(RolePolicies.AdminOrPrefeituraPolicy);
     }
 
     public override async Task HandleAsync(ReorderBannersRequest req, CancellationToken ct)

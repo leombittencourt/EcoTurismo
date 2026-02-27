@@ -13,5 +13,5 @@ public class Validacao
     // Navigation
     public Reserva? Reserva { get; set; }
     public Atrativo? Atrativo { get; set; }
-    public Profile? Operador { get; set; }
+    public Usuario? Operador { get; set; }
 }

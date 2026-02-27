@@ -1,7 +1,6 @@
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Application.Interfaces;
 using FastEndpoints;
-using AuthDomain = EcoTurismo.Domain.Authorization;
 
 namespace EcoTurismo.Api.Endpoints.Reservas;
 
@@ -14,7 +13,7 @@ public class CreateReservaEndpoint : Endpoint<CreateReservaRequest, ReservaDto>
     public override void Configure()
     {
         Post("/api/reservas");
-        Permissions(AuthDomain.Permissions.ReservasCreate);
+        AllowAnonymous(); // Público pode criar reservas
     }
 
     public override async Task HandleAsync(CreateReservaRequest req, CancellationToken ct)

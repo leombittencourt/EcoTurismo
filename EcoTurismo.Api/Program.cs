@@ -1,8 +1,10 @@
 using EcoTurismo.Api.Authorization;
+using EcoTurismo.Application.Auth;
 using EcoTurismo.Application.Interfaces;
 using EcoTurismo.Application.Services;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -11,11 +13,22 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── EF Core ──
-builder.Services.AddDbContext<EcoTurismoDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+var connString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<EcoTurismoDbContext>(o =>
+{
+    o.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"), npgsql =>
+    {
+        npgsql.CommandTimeout(180);
+        npgsql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null);
+    });
+    o.EnableDetailedErrors();
+    o.EnableSensitiveDataLogging();
+});
 
-// ── Authentication ──
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()!;
+
+// Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -25,10 +38,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+            ValidIssuer = jwtSettings.Issuer,
+            ValidAudience = jwtSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
+            ClockSkew = TimeSpan.Zero
         };
     });
 
@@ -52,11 +65,25 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 // ── FastEndpoints ──
 builder.Services.AddFastEndpoints();
 
+// Add Swagger for FastEndpoints
+builder.Services.SwaggerDocument(o =>
+{
+    o.DocumentSettings = s =>
+    {
+        s.Title = "EcoTurismo API";
+        s.Version = "v1";
+        s.Description = "API para gerenciamento do turismo local";
+    };
+});
+
 var app = builder.Build();
 
 // ── Middleware ──
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseFastEndpoints();
+
+// Use Swagger
+app.UseSwaggerGen();
 
 app.Run();

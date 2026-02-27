@@ -8,57 +8,64 @@ public class ProfileConfiguration : IEntityTypeConfiguration<Profile>
 {
     public void Configure(EntityTypeBuilder<Profile> builder)
     {
-        builder.ToTable("profiles");
+        builder.ToTable("Profiles");
 
         builder.HasKey(p => p.Id);
 
         builder.Property(p => p.Id)
-            .HasColumnName("id")
+            .HasColumnName("Id")
             .HasComment("Identificador único do perfil (mesmo ID do auth)");
 
         builder.Property(p => p.Nome)
-            .HasColumnName("nome")
+            .HasColumnName("Nome")
             .HasComment("Nome completo do usuário")
             .IsRequired()
             .HasMaxLength(200);
 
         builder.Property(p => p.Email)
-            .HasColumnName("email")
+            .HasColumnName("Email")
             .HasComment("Endereço de e-mail do usuário")
             .IsRequired()
             .HasMaxLength(200);
 
-        builder.Property(p => p.Role)
-            .HasColumnName("role")
-            .HasComment("Papel do usuário no sistema (admin, operador, publico)")
-            .IsRequired()
-            .HasMaxLength(20);
+        builder.Property(p => p.RoleId)
+            .HasColumnName("RoleId")
+            .HasComment("FK para a role do usuário");
 
         builder.Property(p => p.MunicipioId)
-            .HasColumnName("municipio_id")
+            .HasColumnName("MunicipioId")
             .HasComment("FK para o município vinculado");
 
         builder.Property(p => p.AtrativoId)
-            .HasColumnName("atrativo_id")
+            .HasColumnName("AtrativoId")
             .HasComment("FK para o atrativo vinculado");
 
         builder.Property(p => p.CreatedAt)
-            .HasColumnName("created_at")
+            .HasColumnName("CreatedAt")
             .HasComment("Data de criação do registro");
 
         builder.Property(p => p.UpdatedAt)
-            .HasColumnName("updated_at")
+            .HasColumnName("UpdatedAt")
             .HasComment("Data da última atualização do registro");
 
         builder.Property(p => p.PasswordHash)
-            .HasColumnName("password_hash")
+            .HasColumnName("PasswordHash")
             .HasComment("Hash da senha do usuário");
 
         // Indexes
         builder.HasIndex(p => p.Email)
+            .HasDatabaseName("IX_Profiles_Email")
             .IsUnique();
 
+        builder.HasIndex(p => p.RoleId)
+            .HasDatabaseName("IX_Profiles_RoleId");
+
         // Relationships
+        builder.HasOne(p => p.Role)
+            .WithMany(r => r.Profiles)
+            .HasForeignKey(p => p.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(p => p.Municipio)
             .WithMany(m => m.Profiles)
             .HasForeignKey(p => p.MunicipioId)

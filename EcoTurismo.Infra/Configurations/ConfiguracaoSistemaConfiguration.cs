@@ -8,30 +8,30 @@ public class ConfiguracaoSistemaConfiguration : IEntityTypeConfiguration<Configu
 {
     public void Configure(EntityTypeBuilder<ConfiguracaoSistema> builder)
     {
-        builder.ToTable("configuracoes_sistema");
+        builder.ToTable("ConfiguracoesSistema");
 
         builder.HasKey(c => c.Id);
 
         builder.Property(c => c.Id)
-            .HasColumnName("id")
+            .HasColumnName("Id")
             .HasComment("Identificador único da configuração");
 
         builder.Property(c => c.Chave)
-            .HasColumnName("chave")
+            .HasColumnName("Chave")
             .HasComment("Chave única da configuração")
             .IsRequired()
             .HasMaxLength(100);
 
         builder.Property(c => c.Valor)
-            .HasColumnName("valor")
+            .HasColumnName("Valor")
             .HasComment("Valor da configuração");
 
         builder.Property(c => c.Descricao)
-            .HasColumnName("descricao")
+            .HasColumnName("Descricao")
             .HasComment("Descrição da finalidade da configuração");
 
         builder.Property(c => c.UpdatedAt)
-            .HasColumnName("updated_at")
+            .HasColumnName("UpdatedAt")
             .HasComment("Data da última atualização do registro");
 
         // Indexes

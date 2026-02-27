@@ -8,32 +8,32 @@ public class MunicipioConfiguration : IEntityTypeConfiguration<Municipio>
 {
     public void Configure(EntityTypeBuilder<Municipio> builder)
     {
-        builder.ToTable("municipios");
+        builder.ToTable("Municipios");
 
         builder.HasKey(m => m.Id);
 
         builder.Property(m => m.Id)
-            .HasColumnName("id")
+            .HasColumnName("Id")
             .HasComment("Identificador único do município");
 
         builder.Property(m => m.Nome)
-            .HasColumnName("nome")
+            .HasColumnName("Nome")
             .HasComment("Nome do município")
             .IsRequired()
             .HasMaxLength(200);
 
         builder.Property(m => m.Uf)
-            .HasColumnName("uf")
+            .HasColumnName("Uf")
             .HasComment("Unidade federativa (sigla do estado)")
             .IsRequired()
             .HasMaxLength(2);
 
         builder.Property(m => m.Logo)
-            .HasColumnName("logo")
+            .HasColumnName("Logo")
             .HasComment("URL do logotipo do município");
 
         builder.Property(m => m.CreatedAt)
-            .HasColumnName("created_at")
+            .HasColumnName("CreatedAt")
             .HasComment("Data de criação do registro");
 
         // Relationships

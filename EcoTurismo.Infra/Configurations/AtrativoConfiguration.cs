@@ -8,59 +8,63 @@ public class AtrativoConfiguration : IEntityTypeConfiguration<Atrativo>
 {
     public void Configure(EntityTypeBuilder<Atrativo> builder)
     {
-        builder.ToTable("atrativos");
+        builder.ToTable("Atrativos");
 
         builder.HasKey(a => a.Id);
 
         builder.Property(a => a.Id)
-            .HasColumnName("id")
+            .HasColumnName("Id")
             .HasComment("Identificador único do atrativo");
 
         builder.Property(a => a.MunicipioId)
-            .HasColumnName("municipio_id")
+            .HasColumnName("MunicipioId")
             .HasComment("FK para o município ao qual o atrativo pertence");
 
         builder.Property(a => a.Nome)
-            .HasColumnName("nome")
+            .HasColumnName("Nome")
             .HasComment("Nome do atrativo turístico")
             .IsRequired()
             .HasMaxLength(200);
 
         builder.Property(a => a.Tipo)
-            .HasColumnName("tipo")
+            .HasColumnName("Tipo")
             .HasComment("Tipo do atrativo (balneario, parque, etc.)")
             .IsRequired()
             .HasMaxLength(20);
 
         builder.Property(a => a.Descricao)
-            .HasColumnName("descricao")
+            .HasColumnName("Descricao")
             .HasComment("Descrição detalhada do atrativo");
 
         builder.Property(a => a.Imagem)
-            .HasColumnName("imagem")
+            .HasColumnName("Imagem")
             .HasComment("URL da imagem do atrativo");
 
         builder.Property(a => a.CapacidadeMaxima)
-            .HasColumnName("capacidade_maxima")
+            .HasColumnName("CapacidadeMaxima")
             .HasComment("Capacidade máxima de visitantes");
 
         builder.Property(a => a.OcupacaoAtual)
-            .HasColumnName("ocupacao_atual")
+            .HasColumnName("OcupacaoAtual")
             .HasComment("Quantidade atual de visitantes no local");
 
         builder.Property(a => a.Status)
-            .HasColumnName("status")
+            .HasColumnName("Status")
             .HasComment("Status do atrativo (ativo, inativo)")
             .IsRequired()
             .HasMaxLength(20);
 
         builder.Property(a => a.CreatedAt)
-            .HasColumnName("created_at")
+            .HasColumnName("CreatedAt")
             .HasComment("Data de criação do registro");
 
         builder.Property(a => a.UpdatedAt)
-            .HasColumnName("updated_at")
+            .HasColumnName("UpdatedAt")
             .HasComment("Data da última atualização do registro");
+
+        // Indexes
+        builder.HasIndex(a => a.MunicipioId)
+            .HasDatabaseName("IX_Atrativos_MunicipioId");
 
         // Relationships
         builder.HasOne(a => a.Municipio)

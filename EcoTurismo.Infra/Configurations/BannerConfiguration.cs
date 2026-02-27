@@ -8,45 +8,45 @@ public class BannerConfiguration : IEntityTypeConfiguration<Banner>
 {
     public void Configure(EntityTypeBuilder<Banner> builder)
     {
-        builder.ToTable("banners");
+        builder.ToTable("Banners");
 
         builder.HasKey(b => b.Id);
 
         builder.Property(b => b.Id)
-            .HasColumnName("id")
+            .HasColumnName("Id")
             .HasComment("Identificador único do banner");
 
         builder.Property(b => b.Titulo)
-            .HasColumnName("titulo")
+            .HasColumnName("Titulo")
             .HasComment("Título exibido no banner");
 
         builder.Property(b => b.Subtitulo)
-            .HasColumnName("subtitulo")
+            .HasColumnName("Subtitulo")
             .HasComment("Subtítulo exibido no banner");
 
         builder.Property(b => b.ImagemUrl)
-            .HasColumnName("imagem_url")
+            .HasColumnName("ImagemUrl")
             .HasComment("URL da imagem do banner")
             .IsRequired();
 
         builder.Property(b => b.Link)
-            .HasColumnName("link")
+            .HasColumnName("Link")
             .HasComment("Link de redirecionamento ao clicar no banner");
 
         builder.Property(b => b.Ordem)
-            .HasColumnName("ordem")
+            .HasColumnName("Ordem")
             .HasComment("Ordem de exibição do banner");
 
         builder.Property(b => b.Ativo)
-            .HasColumnName("ativo")
+            .HasColumnName("Ativo")
             .HasComment("Indica se o banner está ativo para exibição");
 
         builder.Property(b => b.CreatedAt)
-            .HasColumnName("created_at")
+            .HasColumnName("CreatedAt")
             .HasComment("Data de criação do registro");
 
         builder.Property(b => b.UpdatedAt)
-            .HasColumnName("updated_at")
+            .HasColumnName("UpdatedAt")
             .HasComment("Data da última atualização do registro");
     }
 }

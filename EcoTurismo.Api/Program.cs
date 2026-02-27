@@ -1,8 +1,10 @@
+using EcoTurismo.Api.Authorization;
 using EcoTurismo.Application.Interfaces;
 using EcoTurismo.Application.Services;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -30,12 +32,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+// ── Authorization ──
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicies();
+});
+
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+
+// ── Memory Cache ──
+builder.Services.AddMemoryCache();
 
 // ── Services (DI) ──
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IReservaService, ReservaService>();
 builder.Services.AddScoped<IQuiosqueService, QuiosqueService>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
 
 // ── FastEndpoints ──
 builder.Services.AddFastEndpoints();

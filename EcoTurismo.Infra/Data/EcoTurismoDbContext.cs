@@ -16,6 +16,9 @@ public class EcoTurismoDbContext : DbContext
     public DbSet<Quiosque> Quiosques => Set<Quiosque>();
     public DbSet<Banner> Banners => Set<Banner>();
     public DbSet<ConfiguracaoSistema> Configuracoes => Set<ConfiguracaoSistema>();
+    public DbSet<Role> Roles => Set<Role>();
+    public DbSet<Permission> Permissions => Set<Permission>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

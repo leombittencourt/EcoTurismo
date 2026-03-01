@@ -8,6 +8,8 @@ public class Municipio
     public string Nome { get; set; } = string.Empty;
     public string Uf { get; set; } = string.Empty;
     public string? Logo { get; set; }
+    public string? LogoTelaLogin { get; set; }
+    public string? LogoAreaPublica { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     // Navigation (ignorar para evitar ciclos)

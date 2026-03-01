@@ -32,6 +32,16 @@ public class MunicipioConfiguration : IEntityTypeConfiguration<Municipio>
             .HasColumnName("Logo")
             .HasComment("URL do logotipo do município");
 
+        builder.Property(m => m.LogoTelaLogin)
+            .HasColumnName("LogoTelaLogin")
+            .HasComment("Logo em base64 para exibição na tela de login")
+            .HasColumnType("text");
+
+        builder.Property(m => m.LogoAreaPublica)
+            .HasColumnName("LogoAreaPublica")
+            .HasComment("Logo em base64 para exibição na área pública/portal")
+            .HasColumnType("text");
+
         builder.Property(m => m.CreatedAt)
             .HasColumnName("CreatedAt")
             .HasComment("Data de criação do registro");

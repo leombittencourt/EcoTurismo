@@ -1,4 +1,5 @@
 using EcoTurismo.Api.Authorization;
+using EcoTurismo.Api.BackgroundServices;
 using EcoTurismo.Api.Middleware;
 using EcoTurismo.Application.Auth;
 using EcoTurismo.Application.Interfaces;
@@ -79,6 +80,11 @@ builder.Services.AddScoped<IReservaService, ReservaService>();
 builder.Services.AddScoped<IQuiosqueService, QuiosqueService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IOcupacaoService, OcupacaoService>();
+
+// ── Background Jobs ──
+builder.Services.AddHostedService<ReconciliacaoOcupacaoJob>();
 
 // ── FastEndpoints ──
 builder.Services.AddFastEndpoints();
@@ -181,8 +187,14 @@ using (var scope = app.Services.CreateScope())
 
 app.UseCors("FrontLocal");
 
-// ── Exception Handling Middleware (deve ser um dos primeiros) ──
+// ── Rate Limiting (primeira camada de proteção) ──
+app.UseRateLimiting();
+
+// ── Exception Handling Middleware ──
 app.UseExceptionHandling();
+
+// ── API Key Validation (para endpoints públicos protegidos) ──
+app.UseApiKeyValidation();
 
 // ── Middleware ──
 app.UseAuthentication();

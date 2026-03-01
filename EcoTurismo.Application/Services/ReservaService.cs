@@ -11,8 +11,13 @@ namespace EcoTurismo.Application.Services;
 public class ReservaService : IReservaService
 {
     private readonly EcoTurismoDbContext _db;
+    private readonly IOcupacaoService _ocupacaoService;
 
-    public ReservaService(EcoTurismoDbContext db) => _db = db;
+    public ReservaService(EcoTurismoDbContext db, IOcupacaoService ocupacaoService)
+    {
+        _db = db;
+        _ocupacaoService = ocupacaoService;
+    }
 
     public async Task<List<ReservaDto>> ListarAsync(Guid? atrativoId)
     {
@@ -83,6 +88,13 @@ public class ReservaService : IReservaService
                 quiosque.Status = (int)QuiosqueStatus.Ocupado;
 
             await _db.SaveChangesAsync();
+
+            // Incrementar ocupação do atrativo (somente se for para hoje ou futuro)
+            await _ocupacaoService.IncrementarOcupacaoAsync(
+                reserva.AtrativoId, 
+                reserva.Data, 
+                reserva.QuantidadePessoas);
+
             await tx.CommitAsync();
 
             return ServiceResult<ReservaDto>.Ok(MapToDto(reserva));
@@ -113,6 +125,34 @@ public class ReservaService : IReservaService
 
         reserva.Status = status;
         await _db.SaveChangesAsync();
+
+        // Gerenciar ocupação do atrativo
+        var statusesAtivos = new[] 
+        { 
+            ReservaStatus.Confirmada, 
+            ReservaStatus.Validada, 
+            ReservaStatus.EmAndamento 
+        };
+
+        var estavivoAntes = statusesAtivos.Contains(statusAnterior);
+        var estaAtivoAgora = statusesAtivos.Contains(status);
+
+        // Se saiu de ativo para inativo, decrementar
+        if (estavivoAntes && !estaAtivoAgora)
+        {
+            await _ocupacaoService.DecrementarOcupacaoAsync(
+                reserva.AtrativoId,
+                reserva.Data,
+                reserva.QuantidadePessoas);
+        }
+        // Se entrou de inativo para ativo, incrementar
+        else if (!estavivoAntes && estaAtivoAgora)
+        {
+            await _ocupacaoService.IncrementarOcupacaoAsync(
+                reserva.AtrativoId,
+                reserva.Data,
+                reserva.QuantidadePessoas);
+        }
 
         if (quiosque is not null)
         {

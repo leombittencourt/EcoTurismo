@@ -10,6 +10,7 @@ using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -17,6 +18,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(o =>
 {
+    o.AddPolicy("AllowFront",
+    policy =>
+    {
+        policy
+            .WithOrigins("https://ecoturismo.lmb.software")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
     o.AddPolicy("FrontLocal", p =>
         p.WithOrigins("http://localhost:5173")
          .AllowAnyHeader()
@@ -185,6 +195,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.UseCors("AllowFront");
 app.UseCors("FrontLocal");
 
 // ── Rate Limiting (primeira camada de proteção) ──

@@ -8,16 +8,24 @@ COPY ["EcoTurismo.Application/EcoTurismo.Application.csproj", "EcoTurismo.Applic
 COPY ["EcoTurismo.Domain/EcoTurismo.Domain.csproj", "EcoTurismo.Domain/"]
 COPY ["EcoTurismo.Infra/EcoTurismo.Infra.csproj", "EcoTurismo.Infra/"]
 
-RUN dotnet restore "EcoTurismo/EcoTurismo.csproj"
+# ✅ CORRIGIDO: Restore do projeto correto
+RUN dotnet restore "EcoTurismo.Api/EcoTurismo.Api.csproj"
 
 # Copia todo o código e faz o build
 COPY . .
-WORKDIR "/src/EcoTurismo"
-RUN dotnet build "EcoTurismo.csproj" -c Release -o /app/build
+
+# ✅ CORRIGIDO: WORKDIR correto
+WORKDIR "/src/EcoTurismo.Api"
+
+# ✅ CORRIGIDO: Build do projeto correto
+RUN dotnet build "EcoTurismo.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
-RUN dotnet publish "EcoTurismo.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# ✅ CORRIGIDO: Publish do projeto correto
+RUN dotnet publish "EcoTurismo.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
 # Stage 3: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
@@ -34,4 +42,9 @@ ENV ASPNETCORE_URLS=http://+:8080 \
     ASPNETCORE_ENVIRONMENT=Production \
     DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
-ENTRYPOINT ["dotnet", "EcoTurismo.dll"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
+
+# ✅ CORRIGIDO: DLL correto
+ENTRYPOINT ["dotnet", "EcoTurismo.Api.dll"]

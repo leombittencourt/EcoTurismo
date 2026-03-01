@@ -11,7 +11,7 @@ public class UpdateQuiosqueValidator : Validator<UpdateQuiosqueRequest>
             .NotEmpty().WithMessage("Id é obrigatório");
 
         RuleFor(x => x.Status)
-            .MaximumLength(15).WithMessage("Status deve ter no máximo 15 caracteres")
+              .GreaterThanOrEqualTo(0).WithMessage("Status deve ser maior ou igual a 0")
             .When(x => x.Status is not null);
     }
 }

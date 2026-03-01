@@ -14,7 +14,7 @@ public class CreateQuiosqueEndpoint : Endpoint<CreateQuiosqueRequest, QuiosqueDt
     public override void Configure()
     {
         Post("/api/quiosques");
-        Policies(RolePolicies.AdminOrPrefeituraPolicy);
+        Policies(RolePolicies.AdminOrBalnearioPolicy);
     }
 
     public override async Task HandleAsync(CreateQuiosqueRequest req, CancellationToken ct)

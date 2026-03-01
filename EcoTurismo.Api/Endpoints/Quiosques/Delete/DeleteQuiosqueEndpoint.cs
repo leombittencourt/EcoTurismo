@@ -4,7 +4,7 @@ using FastEndpoints;
 
 namespace EcoTurismo.Api.Endpoints.Quiosques;
 
-public class DeleteQuiosqueEndpoint : Endpoint<DeleteQuiosqueRequest>
+public class DeleteQuiosqueEndpoint : EndpointWithoutRequest
 {
     private readonly IQuiosqueService _service;
 
@@ -13,12 +13,14 @@ public class DeleteQuiosqueEndpoint : Endpoint<DeleteQuiosqueRequest>
     public override void Configure()
     {
         Delete("/api/quiosques/{Id}");
-        Policies(RolePolicies.AdminPolicy); // Apenas Admin pode deletar quiosques
+        Policies(RolePolicies.AdminOrBalnearioPolicy); // Apenas Admin ou Balneário pode deletar quiosques
     }
 
-    public override async Task HandleAsync(DeleteQuiosqueRequest req, CancellationToken ct)
+    public override async Task HandleAsync(CancellationToken ct)
     {
-        var ok = await _service.ExcluirAsync(req.Id);
+        var id = Route<Guid>("Id");
+
+        var ok = await _service.ExcluirAsync(id);
 
         if (!ok)
         {

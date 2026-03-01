@@ -309,12 +309,10 @@ namespace EcoTurismo.Infra.Migrations
                         .HasColumnName("PosicaoY")
                         .HasComment("Posição Y do quiosque no mapa");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)")
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
                         .HasColumnName("Status")
-                        .HasComment("Status do quiosque (disponivel, ocupado, manutencao)");
+                        .HasComment("Status do quiosque");
 
                     b.Property<bool>("TemChurrasqueira")
                         .HasColumnType("boolean")
@@ -402,10 +400,10 @@ namespace EcoTurismo.Infra.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("Status")
-                        .HasComment("Status da reserva (confirmada, cancelada, utilizada)");
+                        .HasComment("Status da reserva");
 
                     b.Property<string>("Tipo")
                         .IsRequired()
@@ -566,9 +564,6 @@ namespace EcoTurismo.Infra.Migrations
                         .HasColumnName("MunicipioId")
                         .HasComment("FK para o município vinculado");
 
-                    b.Property<Guid?>("MunicipioId1")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -586,9 +581,6 @@ namespace EcoTurismo.Infra.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("RoleId")
                         .HasComment("FK para a role do usuário");
-
-                    b.Property<Guid?>("RoleId1")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("Telefone")
                         .HasMaxLength(20)
@@ -616,12 +608,8 @@ namespace EcoTurismo.Infra.Migrations
 
                     b.HasIndex("MunicipioId");
 
-                    b.HasIndex("MunicipioId1");
-
                     b.HasIndex("RoleId")
                         .HasDatabaseName("IX_Usuarios_RoleId");
-
-                    b.HasIndex("RoleId1");
 
                     b.ToTable("Usuarios", (string)null);
                 });
@@ -746,23 +734,15 @@ namespace EcoTurismo.Infra.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("EcoTurismo.Domain.Entities.Municipio", "Municipio")
-                        .WithMany()
+                        .WithMany("Usuarios")
                         .HasForeignKey("MunicipioId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("EcoTurismo.Domain.Entities.Municipio", null)
-                        .WithMany("Usuarios")
-                        .HasForeignKey("MunicipioId1");
-
                     b.HasOne("EcoTurismo.Domain.Entities.Role", "Role")
-                        .WithMany()
+                        .WithMany("Usuarios")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("EcoTurismo.Domain.Entities.Role", null)
-                        .WithMany("Usuarios")
-                        .HasForeignKey("RoleId1");
 
                     b.Navigation("Atrativo");
 

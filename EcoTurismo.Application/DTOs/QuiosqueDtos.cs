@@ -1,3 +1,5 @@
+using EcoTurismo.Domain.Enums;
+
 namespace EcoTurismo.Application.DTOs;
 
 public record QuiosqueDto(
@@ -15,7 +17,7 @@ public record QuiosqueCreateRequest
     public Guid? AtrativoId { get; init; }
     public int Numero { get; init; }
     public bool TemChurrasqueira { get; init; }
-    public string Status { get; init; } = "disponivel";
+    public int Status { get; init; } = (int)QuiosqueStatus.Disponivel;
     public int PosicaoX { get; init; }
     public int PosicaoY { get; init; }
 }
@@ -24,7 +26,7 @@ public record QuiosqueUpdateRequest
 {
     public int? Numero { get; init; }
     public bool? TemChurrasqueira { get; init; }
-    public string? Status { get; init; }
+    public int Status { get; init; } = (int)QuiosqueStatus.Disponivel;
     public int? PosicaoX { get; init; }
     public int? PosicaoY { get; init; }
 }

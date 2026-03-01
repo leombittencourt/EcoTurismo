@@ -11,7 +11,6 @@ public class CreateQuiosqueValidator : Validator<CreateQuiosqueRequest>
             .GreaterThan(0).WithMessage("Número deve ser maior que zero");
 
         RuleFor(x => x.Status)
-            .NotEmpty().WithMessage("Status é obrigatório")
-            .MaximumLength(15);
+            .GreaterThanOrEqualTo(0).WithMessage("Status é obrigatório");
     }
 }

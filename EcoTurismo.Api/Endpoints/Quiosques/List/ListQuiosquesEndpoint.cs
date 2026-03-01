@@ -1,10 +1,11 @@
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Application.Interfaces;
+using EcoTurismo.Domain.Entities;
 using FastEndpoints;
 
 namespace EcoTurismo.Api.Endpoints.Quiosques;
 
-public class ListQuiosquesEndpoint : Endpoint<ListQuiosquesRequest, List<QuiosqueDto>>
+public class ListQuiosquesEndpoint : EndpointWithoutRequest<List<QuiosqueDto>>
 {
     private readonly IQuiosqueService _service;
 
@@ -12,13 +13,14 @@ public class ListQuiosquesEndpoint : Endpoint<ListQuiosquesRequest, List<Quiosqu
 
     public override void Configure()
     {
-        Get("/api/quiosques");
+        Get("/api/quiosques-atrativo/{atrativoId}");
         AllowAnonymous();
     }
 
-    public override async Task HandleAsync(ListQuiosquesRequest req, CancellationToken ct)
+    public override async Task HandleAsync(CancellationToken ct)
     {
-        var data = await _service.ListarAsync(req.AtrativoId);
+        var atrativoId = Route<Guid>("atrativoId");
+        var data = await _service.ListarAsync(atrativoId);
         await Send.OkAsync(data, ct);
     }
 }

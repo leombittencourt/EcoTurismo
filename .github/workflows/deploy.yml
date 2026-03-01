@@ -1,0 +1,71 @@
+name: Deploy EcoTurismo API
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  AZURE_WEBAPP_NAME: 'ecoturismo-api'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: 📦 Restore dependencies
+        run: dotnet restore
+
+      - name: 🏗️ Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: 🧪 Run tests
+        run: dotnet test --no-build --verbosity normal --configuration Release
+
+  deploy:
+    name: Deploy to Azure
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: 📦 Restore dependencies
+        run: dotnet restore
+
+      - name: 🏗️ Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: 📤 Publish
+        run: dotnet publish EcoTurismo.Api/EcoTurismo.Api.csproj -c Release -o ./publish
+
+      # ✅ Migrations rodam automaticamente no Program.cs ao iniciar a aplicação!
+      # Não precisa de step separado para migrations
+
+      - name: 🚀 Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: './publish'
+
+      - name: 🎉 Deployment completed
+        run: echo "✅ Deploy concluído com sucesso! Migrations foram aplicadas automaticamente ao iniciar."

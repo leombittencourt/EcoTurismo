@@ -1,4 +1,5 @@
 using EcoTurismo.Domain.Entities;
+using EcoTurismo.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -72,11 +73,16 @@ public class ReservaConfiguration : IEntityTypeConfiguration<Reserva>
             .HasColumnName("QuantidadePessoas")
             .HasComment("Quantidade de pessoas na reserva");
 
+        // Converter enum para string no banco de dados
         builder.Property(r => r.Status)
             .HasColumnName("Status")
-            .HasComment("Status da reserva (confirmada, cancelada, utilizada)")
+            .HasComment("Status da reserva")
             .IsRequired()
-            .HasMaxLength(15);
+            .HasMaxLength(20)
+            .HasConversion(
+                v => v.ToStringValue(),
+                v => ReservaStatusExtensions.FromString(v)
+            );
 
         builder.Property(r => r.Token)
             .HasColumnName("Token")

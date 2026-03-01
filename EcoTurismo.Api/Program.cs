@@ -13,6 +13,16 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(o =>
+{
+    o.AddPolicy("FrontLocal", p =>
+        p.WithOrigins("http://localhost:5173")
+         .AllowAnyHeader()
+         .AllowAnyMethod()
+         .AllowCredentials() // só se você usar cookies; se for Bearer token, pode remover
+    );
+});
+
 var connString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<EcoTurismoDbContext>(o =>
 {
@@ -106,10 +116,48 @@ using (var scope = app.Services.CreateScope())
 
         var db = services.GetRequiredService<EcoTurismoDbContext>();
 
+        // Verificar conexão
+        logger.LogInformation("Testando conexão com o banco de dados...");
+        var canConnect = await db.Database.CanConnectAsync();
+        logger.LogInformation("Conexão com banco: {Status}", canConnect ? "✅ OK" : "❌ FALHOU");
+
+        if (!canConnect)
+        {
+            logger.LogError("Não foi possível conectar ao banco de dados. Verifique a connection string.");
+            throw new InvalidOperationException("Falha ao conectar no banco de dados");
+        }
+
+        // Verificar migrations pendentes
+        var pendingMigrations = await db.Database.GetPendingMigrationsAsync();
+        var appliedMigrations = await db.Database.GetAppliedMigrationsAsync();
+
+        logger.LogInformation("Migrations aplicadas: {Count}", appliedMigrations.Count());
+        logger.LogInformation("Migrations pendentes: {Count}", pendingMigrations.Count());
+
+        if (pendingMigrations.Any())
+        {
+            logger.LogInformation("📋 Migrations pendentes:");
+            foreach (var migration in pendingMigrations)
+            {
+                logger.LogInformation("  - {Migration}", migration);
+            }
+        }
+
         // Executar migrations automaticamente
         logger.LogInformation("Aplicando migrations pendentes...");
         await db.Database.MigrateAsync();
         logger.LogInformation("Migrations aplicadas com sucesso!");
+
+        // Verificar novamente
+        var remainingPending = await db.Database.GetPendingMigrationsAsync();
+        if (remainingPending.Any())
+        {
+            logger.LogWarning("⚠️ Ainda há {Count} migrations pendentes após MigrateAsync", remainingPending.Count());
+        }
+        else
+        {
+            logger.LogInformation("✅ Todas as migrations foram aplicadas!");
+        }
 
         // Executar seed de dados iniciais
         logger.LogInformation("Executando seed de dados iniciais...");
@@ -121,9 +169,16 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         logger.LogError(ex, "❌ Erro ao configurar o banco de dados. Detalhes: {Message}", ex.Message);
+        logger.LogError("Stack Trace: {StackTrace}", ex.StackTrace);
+        if (ex.InnerException != null)
+        {
+            logger.LogError("Inner Exception: {InnerMessage}", ex.InnerException.Message);
+        }
         throw; // Re-throw para impedir a inicialização com erro
     }
 }
+
+app.UseCors("FrontLocal");
 
 // ── Middleware ──
 app.UseAuthentication();

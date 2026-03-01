@@ -1,6 +1,7 @@
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Application.Interfaces;
 using EcoTurismo.Domain.Entities;
+using EcoTurismo.Domain.Enums;
 using EcoTurismo.Infra.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,7 +54,7 @@ public class QuiosqueService : IQuiosqueService
 
         if (request.Numero.HasValue) q.Numero = request.Numero.Value;
         if (request.TemChurrasqueira.HasValue) q.TemChurrasqueira = request.TemChurrasqueira.Value;
-        if (request.Status is not null) q.Status = request.Status;
+        if (request.Status != 0) q.Status = request.Status;
         if (request.PosicaoX.HasValue) q.PosicaoX = request.PosicaoX.Value;
         if (request.PosicaoY.HasValue) q.PosicaoY = request.PosicaoY.Value;
 
@@ -73,7 +74,7 @@ public class QuiosqueService : IQuiosqueService
 
     private static QuiosqueDto MapToDto(Quiosque q) => new(
         q.Id, q.AtrativoId, q.Numero,
-        q.TemChurrasqueira, q.Status,
+        q.TemChurrasqueira, ((QuiosqueStatus)q.Status).ToString(),
         q.PosicaoX, q.PosicaoY
     );
 }

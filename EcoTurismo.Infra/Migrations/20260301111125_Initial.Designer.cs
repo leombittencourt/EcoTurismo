@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoTurismo.Infra.Migrations
 {
     [DbContext(typeof(EcoTurismoDbContext))]
-    [Migration("20260227175959_Initial")]
+    [Migration("20260301111125_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -279,75 +279,6 @@ namespace EcoTurismo.Infra.Migrations
                     b.ToTable("Permissions", (string)null);
                 });
 
-            modelBuilder.Entity("EcoTurismo.Domain.Entities.Profile", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("Id")
-                        .HasComment("Identificador único do perfil (mesmo ID do auth)");
-
-                    b.Property<Guid?>("AtrativoId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("AtrativoId")
-                        .HasComment("FK para o atrativo vinculado");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAt")
-                        .HasComment("Data de criação do registro");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("Email")
-                        .HasComment("Endereço de e-mail do usuário");
-
-                    b.Property<Guid?>("MunicipioId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("MunicipioId")
-                        .HasComment("FK para o município vinculado");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("Nome")
-                        .HasComment("Nome completo do usuário");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("PasswordHash")
-                        .HasComment("Hash da senha do usuário");
-
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("RoleId")
-                        .HasComment("FK para a role do usuário");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UpdatedAt")
-                        .HasComment("Data da última atualização do registro");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AtrativoId");
-
-                    b.HasIndex("Email")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Profiles_Email");
-
-                    b.HasIndex("MunicipioId");
-
-                    b.HasIndex("RoleId")
-                        .HasDatabaseName("IX_Profiles_RoleId");
-
-                    b.ToTable("Profiles", (string)null);
-                });
-
             modelBuilder.Entity("EcoTurismo.Domain.Entities.Quiosque", b =>
                 {
                     b.Property<Guid>("Id")
@@ -381,12 +312,10 @@ namespace EcoTurismo.Infra.Migrations
                         .HasColumnName("PosicaoY")
                         .HasComment("Posição Y do quiosque no mapa");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)")
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
                         .HasColumnName("Status")
-                        .HasComment("Status do quiosque (disponivel, ocupado, manutencao)");
+                        .HasComment("Status do quiosque");
 
                     b.Property<bool>("TemChurrasqueira")
                         .HasColumnType("boolean")
@@ -474,10 +403,10 @@ namespace EcoTurismo.Infra.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("Status")
-                        .HasComment("Status da reserva (confirmada, cancelada, utilizada)");
+                        .HasComment("Status da reserva");
 
                     b.Property<string>("Tipo")
                         .IsRequired()
@@ -595,6 +524,99 @@ namespace EcoTurismo.Infra.Migrations
                     b.ToTable("RolePermissions", (string)null);
                 });
 
+            modelBuilder.Entity("EcoTurismo.Domain.Entities.Usuario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id")
+                        .HasComment("Identificador único do usuário");
+
+                    b.Property<bool>("Ativo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("Ativo")
+                        .HasComment("Indica se o usuário está ativo no sistema");
+
+                    b.Property<Guid?>("AtrativoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("AtrativoId")
+                        .HasComment("FK para o atrativo vinculado");
+
+                    b.Property<string>("Cpf")
+                        .HasMaxLength(14)
+                        .HasColumnType("character varying(14)")
+                        .HasColumnName("Cpf")
+                        .HasComment("CPF do usuário");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt")
+                        .HasComment("Data de criação do registro");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("Email")
+                        .HasComment("Endereço de e-mail do usuário");
+
+                    b.Property<Guid?>("MunicipioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("MunicipioId")
+                        .HasComment("FK para o município vinculado");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("Nome")
+                        .HasComment("Nome completo do usuário");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("PasswordHash")
+                        .HasComment("Hash da senha do usuário");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("RoleId")
+                        .HasComment("FK para a role do usuário");
+
+                    b.Property<string>("Telefone")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("Telefone")
+                        .HasComment("Telefone do usuário");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAt")
+                        .HasComment("Data da última atualização do registro");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AtrativoId");
+
+                    b.HasIndex("Cpf")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Usuarios_Cpf")
+                        .HasFilter("\"Cpf\" IS NOT NULL");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Usuarios_Email");
+
+                    b.HasIndex("MunicipioId");
+
+                    b.HasIndex("RoleId")
+                        .HasDatabaseName("IX_Usuarios_RoleId");
+
+                    b.ToTable("Usuarios", (string)null);
+                });
+
             modelBuilder.Entity("EcoTurismo.Domain.Entities.Validacao", b =>
                 {
                     b.Property<Guid>("Id")
@@ -660,31 +682,6 @@ namespace EcoTurismo.Infra.Migrations
                     b.Navigation("Municipio");
                 });
 
-            modelBuilder.Entity("EcoTurismo.Domain.Entities.Profile", b =>
-                {
-                    b.HasOne("EcoTurismo.Domain.Entities.Atrativo", "Atrativo")
-                        .WithMany()
-                        .HasForeignKey("AtrativoId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("EcoTurismo.Domain.Entities.Municipio", "Municipio")
-                        .WithMany("Profiles")
-                        .HasForeignKey("MunicipioId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("EcoTurismo.Domain.Entities.Role", "Role")
-                        .WithMany("Profiles")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Atrativo");
-
-                    b.Navigation("Municipio");
-
-                    b.Navigation("Role");
-                });
-
             modelBuilder.Entity("EcoTurismo.Domain.Entities.Quiosque", b =>
                 {
                     b.HasOne("EcoTurismo.Domain.Entities.Atrativo", "Atrativo")
@@ -732,6 +729,31 @@ namespace EcoTurismo.Infra.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("EcoTurismo.Domain.Entities.Usuario", b =>
+                {
+                    b.HasOne("EcoTurismo.Domain.Entities.Atrativo", "Atrativo")
+                        .WithMany()
+                        .HasForeignKey("AtrativoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("EcoTurismo.Domain.Entities.Municipio", "Municipio")
+                        .WithMany("Usuarios")
+                        .HasForeignKey("MunicipioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("EcoTurismo.Domain.Entities.Role", "Role")
+                        .WithMany("Usuarios")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Atrativo");
+
+                    b.Navigation("Municipio");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("EcoTurismo.Domain.Entities.Validacao", b =>
                 {
                     b.HasOne("EcoTurismo.Domain.Entities.Atrativo", "Atrativo")
@@ -739,7 +761,7 @@ namespace EcoTurismo.Infra.Migrations
                         .HasForeignKey("AtrativoId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("EcoTurismo.Domain.Entities.Profile", "Operador")
+                    b.HasOne("EcoTurismo.Domain.Entities.Usuario", "Operador")
                         .WithMany()
                         .HasForeignKey("OperadorId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -767,7 +789,7 @@ namespace EcoTurismo.Infra.Migrations
                 {
                     b.Navigation("Atrativos");
 
-                    b.Navigation("Profiles");
+                    b.Navigation("Usuarios");
                 });
 
             modelBuilder.Entity("EcoTurismo.Domain.Entities.Permission", b =>
@@ -777,9 +799,9 @@ namespace EcoTurismo.Infra.Migrations
 
             modelBuilder.Entity("EcoTurismo.Domain.Entities.Role", b =>
                 {
-                    b.Navigation("Profiles");
-
                     b.Navigation("RolePermissions");
+
+                    b.Navigation("Usuarios");
                 });
 #pragma warning restore 612, 618
         }

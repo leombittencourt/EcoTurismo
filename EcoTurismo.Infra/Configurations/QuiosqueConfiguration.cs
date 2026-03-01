@@ -1,4 +1,5 @@
 using EcoTurismo.Domain.Entities;
+using EcoTurismo.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -30,9 +31,8 @@ public class QuiosqueConfiguration : IEntityTypeConfiguration<Quiosque>
 
         builder.Property(q => q.Status)
             .HasColumnName("Status")
-            .HasComment("Status do quiosque (disponivel, ocupado, manutencao)")
-            .IsRequired()
-            .HasMaxLength(15);
+            .HasComment("Status do quiosque")
+            .IsRequired();
 
         builder.Property(q => q.PosicaoX)
             .HasColumnName("PosicaoX")

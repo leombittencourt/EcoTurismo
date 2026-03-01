@@ -14,7 +14,8 @@ public class UpdateQuiosqueEndpoint : Endpoint<UpdateQuiosqueRequest, QuiosqueDt
     public override void Configure()
     {
         Put("/api/quiosques/{Id}");
-        Policies(RolePolicies.AdminOrPrefeituraPolicy);
+        AllowAnonymous();
+        //Policies(RolePolicies.AdminOrBalnearioPolicy);
     }
 
     public override async Task HandleAsync(UpdateQuiosqueRequest req, CancellationToken ct)
@@ -23,7 +24,7 @@ public class UpdateQuiosqueEndpoint : Endpoint<UpdateQuiosqueRequest, QuiosqueDt
         {
             Numero = req.Numero,
             TemChurrasqueira = req.TemChurrasqueira,
-            Status = req.Status,
+            Status = req.Status.GetValueOrDefault(),
             PosicaoX = req.PosicaoX,
             PosicaoY = req.PosicaoY,
         };

@@ -14,7 +14,8 @@ public class ListReservasEndpoint : Endpoint<ListReservasRequest, List<ReservaDt
     public override void Configure()
     {
         Get("/api/reservas");
-        Policies(RolePolicies.AnyAuthenticatedPolicy); // Qualquer usuário autenticado pode listar reservas
+        AllowAnonymous();
+        //Policies(RolePolicies.AnyAuthenticatedPolicy); // Qualquer usuário autenticado pode listar reservas
     }
 
     public override async Task HandleAsync(ListReservasRequest req, CancellationToken ct)

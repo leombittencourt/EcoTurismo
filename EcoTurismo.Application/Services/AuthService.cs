@@ -32,6 +32,7 @@ public class AuthService : IAuthService
             // Buscar usuário por email (case insensitive)
             var usuario = await _db.Usuarios
                 .Include(u => u.Role)
+                .Include(u => u.Atrativo)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower());
 

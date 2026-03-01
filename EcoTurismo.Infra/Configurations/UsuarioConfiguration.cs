@@ -83,12 +83,12 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
 
         // Relationships
         builder.HasOne(u => u.Role)
-            .WithMany()
+            .WithMany(r => r.Usuarios)
             .HasForeignKey(u => u.RoleId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(u => u.Municipio)
-            .WithMany()
+            .WithMany(m => m.Usuarios)
             .HasForeignKey(u => u.MunicipioId)
             .OnDelete(DeleteBehavior.SetNull);
 

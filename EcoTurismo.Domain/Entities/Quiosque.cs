@@ -1,3 +1,5 @@
+using EcoTurismo.Domain.Enums;
+
 namespace EcoTurismo.Domain.Entities;
 
 public class Quiosque
@@ -6,7 +8,7 @@ public class Quiosque
     public Guid? AtrativoId { get; set; }
     public int Numero { get; set; }
     public bool TemChurrasqueira { get; set; }
-    public string Status { get; set; } = "disponivel";
+    public int Status { get; set; } = (int)QuiosqueStatus.Disponivel;
     public int PosicaoX { get; set; }
     public int PosicaoY { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;

@@ -1,3 +1,5 @@
+using EcoTurismo.Domain.Enums;
+
 namespace EcoTurismo.Domain.Entities;
 
 public class Reserva
@@ -14,7 +16,7 @@ public class Reserva
     public DateOnly Data { get; set; }
     public DateOnly? DataFim { get; set; }
     public int QuantidadePessoas { get; set; } = 1;
-    public string Status { get; set; } = "confirmada";
+    public ReservaStatus Status { get; set; } = ReservaStatus.Confirmada;
     public string Token { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 

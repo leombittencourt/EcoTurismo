@@ -1,5 +1,6 @@
 using EcoTurismo.Api.Authorization;
 using EcoTurismo.Application.Interfaces;
+using EcoTurismo.Domain.Enums;
 using FastEndpoints;
 
 namespace EcoTurismo.Api.Endpoints.Reservas;
@@ -18,7 +19,10 @@ public class UpdateReservaStatusEndpoint : Endpoint<UpdateReservaStatusRequest>
 
     public override async Task HandleAsync(UpdateReservaStatusRequest req, CancellationToken ct)
     {
-        var ok = await _service.AtualizarStatusAsync(req.Id, req.Status);
+        // Converter string para enum
+        var status = ReservaStatusExtensions.FromString(req.Status);
+
+        var ok = await _service.AtualizarStatusAsync(req.Id, status);
 
         if (!ok)
         {

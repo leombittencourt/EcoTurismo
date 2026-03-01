@@ -25,4 +25,8 @@
     <ProjectReference Include="..\EcoTurismo.Domain\EcoTurismo.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
 </Project>

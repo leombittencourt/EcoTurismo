@@ -146,43 +146,6 @@ namespace EcoTurismo.Infra.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Profiles",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "Identificador único do perfil (mesmo ID do auth)"),
-                    Nome = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false, comment: "Nome completo do usuário"),
-                    Email = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false, comment: "Endereço de e-mail do usuário"),
-                    RoleId = table.Column<Guid>(type: "uuid", nullable: false, comment: "FK para a role do usuário"),
-                    MunicipioId = table.Column<Guid>(type: "uuid", nullable: true, comment: "FK para o município vinculado"),
-                    AtrativoId = table.Column<Guid>(type: "uuid", nullable: true, comment: "FK para o atrativo vinculado"),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "Data de criação do registro"),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "Data da última atualização do registro"),
-                    PasswordHash = table.Column<string>(type: "text", nullable: false, comment: "Hash da senha do usuário")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Profiles", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Profiles_Atrativos_AtrativoId",
-                        column: x => x.AtrativoId,
-                        principalTable: "Atrativos",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_Profiles_Municipios_MunicipioId",
-                        column: x => x.MunicipioId,
-                        principalTable: "Municipios",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_Profiles_Roles_RoleId",
-                        column: x => x.RoleId,
-                        principalTable: "Roles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Quiosques",
                 columns: table => new
                 {
@@ -190,7 +153,7 @@ namespace EcoTurismo.Infra.Migrations
                     AtrativoId = table.Column<Guid>(type: "uuid", nullable: true, comment: "FK para o atrativo ao qual o quiosque pertence"),
                     Numero = table.Column<int>(type: "integer", nullable: false, comment: "Número identificador do quiosque"),
                     TemChurrasqueira = table.Column<bool>(type: "boolean", nullable: false, comment: "Indica se o quiosque possui churrasqueira"),
-                    Status = table.Column<string>(type: "character varying(15)", maxLength: 15, nullable: false, comment: "Status do quiosque (disponivel, ocupado, manutencao)"),
+                    Status = table.Column<int>(type: "integer", nullable: false, comment: "Status do quiosque"),
                     PosicaoX = table.Column<int>(type: "integer", nullable: false, comment: "Posição X do quiosque no mapa"),
                     PosicaoY = table.Column<int>(type: "integer", nullable: false, comment: "Posição Y do quiosque no mapa"),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "Data de criação do registro"),
@@ -205,6 +168,46 @@ namespace EcoTurismo.Infra.Migrations
                         principalTable: "Atrativos",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Usuarios",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, comment: "Identificador único do usuário"),
+                    Nome = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false, comment: "Nome completo do usuário"),
+                    Email = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false, comment: "Endereço de e-mail do usuário"),
+                    PasswordHash = table.Column<string>(type: "text", nullable: false, comment: "Hash da senha do usuário"),
+                    RoleId = table.Column<Guid>(type: "uuid", nullable: false, comment: "FK para a role do usuário"),
+                    MunicipioId = table.Column<Guid>(type: "uuid", nullable: true, comment: "FK para o município vinculado"),
+                    AtrativoId = table.Column<Guid>(type: "uuid", nullable: true, comment: "FK para o atrativo vinculado"),
+                    Telefone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true, comment: "Telefone do usuário"),
+                    Cpf = table.Column<string>(type: "character varying(14)", maxLength: 14, nullable: true, comment: "CPF do usuário"),
+                    Ativo = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true, comment: "Indica se o usuário está ativo no sistema"),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "Data de criação do registro"),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "Data da última atualização do registro")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Usuarios", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Usuarios_Atrativos_AtrativoId",
+                        column: x => x.AtrativoId,
+                        principalTable: "Atrativos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Usuarios_Municipios_MunicipioId",
+                        column: x => x.MunicipioId,
+                        principalTable: "Municipios",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Usuarios_Roles_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "Roles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -223,7 +226,7 @@ namespace EcoTurismo.Infra.Migrations
                     Data = table.Column<DateOnly>(type: "date", nullable: false, comment: "Data de início da reserva"),
                     DataFim = table.Column<DateOnly>(type: "date", nullable: true, comment: "Data de fim da reserva (para pernoite)"),
                     QuantidadePessoas = table.Column<int>(type: "integer", nullable: false, comment: "Quantidade de pessoas na reserva"),
-                    Status = table.Column<string>(type: "character varying(15)", maxLength: 15, nullable: false, comment: "Status da reserva (confirmada, cancelada, utilizada)"),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, comment: "Status da reserva"),
                     Token = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, comment: "Token único para validação da reserva"),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, comment: "Data de criação do registro")
                 },
@@ -266,15 +269,15 @@ namespace EcoTurismo.Infra.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_Validacoes_Profiles_OperadorId",
-                        column: x => x.OperadorId,
-                        principalTable: "Profiles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
                         name: "FK_Validacoes_Reservas_ReservaId",
                         column: x => x.ReservaId,
                         principalTable: "Reservas",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Validacoes_Usuarios_OperadorId",
+                        column: x => x.OperadorId,
+                        principalTable: "Usuarios",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                 });
@@ -301,27 +304,6 @@ namespace EcoTurismo.Infra.Migrations
                 table: "Permissions",
                 columns: new[] { "Resource", "Action" },
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Profiles_AtrativoId",
-                table: "Profiles",
-                column: "AtrativoId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Profiles_Email",
-                table: "Profiles",
-                column: "Email",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Profiles_MunicipioId",
-                table: "Profiles",
-                column: "MunicipioId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Profiles_RoleId",
-                table: "Profiles",
-                column: "RoleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Quiosques_AtrativoId",
@@ -358,6 +340,34 @@ namespace EcoTurismo.Infra.Migrations
                 table: "Roles",
                 column: "NormalizedName",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Usuarios_AtrativoId",
+                table: "Usuarios",
+                column: "AtrativoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Usuarios_Cpf",
+                table: "Usuarios",
+                column: "Cpf",
+                unique: true,
+                filter: "\"Cpf\" IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Usuarios_Email",
+                table: "Usuarios",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Usuarios_MunicipioId",
+                table: "Usuarios",
+                column: "MunicipioId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Usuarios_RoleId",
+                table: "Usuarios",
+                column: "RoleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Validacoes_AtrativoId",
@@ -399,16 +409,16 @@ namespace EcoTurismo.Infra.Migrations
                 name: "Permissions");
 
             migrationBuilder.DropTable(
-                name: "Profiles");
-
-            migrationBuilder.DropTable(
                 name: "Reservas");
 
             migrationBuilder.DropTable(
-                name: "Roles");
+                name: "Usuarios");
 
             migrationBuilder.DropTable(
                 name: "Quiosques");
+
+            migrationBuilder.DropTable(
+                name: "Roles");
 
             migrationBuilder.DropTable(
                 name: "Atrativos");

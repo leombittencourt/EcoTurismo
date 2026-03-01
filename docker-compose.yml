@@ -1,39 +1,49 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: ecoturismo-postgres
-    environment:
-      POSTGRES_DB: ecoturismo
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecoturismo-api
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      # ASP.NET Core
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+
+      # Database
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+
+      # JWT Settings
+      - JwtSettings__Key=${JWT_SECRET_KEY}
+      - JwtSettings__Issuer=EcoTurismoApi
+      - JwtSettings__Audience=EcoTurismoApp
+      - JwtSettings__ExpirationMinutes=60
+
+      # API Keys (adicione quantas chaves precisar)
+      - ApiKeys__ValidKeys__0=${API_KEY_WEB}
+      - ApiKeys__ValidKeys__1=${API_KEY_MOBILE}
+
+      # File Storage
+      - FileStorage__UploadsFolder=uploads
+
+      # Logging
+      - Logging__LogLevel__Default=Information
+      - Logging__LogLevel__Microsoft.AspNetCore=Warning
+
+    restart: unless-stopped
+    networks:
+      - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: ecoturismo-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@ecoturismo.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - "5050:80"
-    depends_on:
-      - postgres
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-
-volumes:
-  postgres_data:
-    driver: local
-  pgadmin_data:
-    driver: local
+networks:
+  app-network:
+    driver: bridge

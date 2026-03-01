@@ -1,0 +1,79 @@
+# .dockerignore
+# Arquivos e diretórios que não devem ser copiados para o container
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+
+# Uploads (arquivos de usuário não devem ir para a imagem)
+uploads/
+wwwroot/uploads/
+
+# Documentation
+*.md
+docs/
+
+# Tests
+**/*Tests/
+**/*Test/
+
+# Secrets
+secrets/
+*.secrets.json
+appsettings.Production.json
+appsettings.Staging.json
+
+# Migrations (opcional - se preferir rodar migrations separadamente)
+# **/Migrations/
+
+# Node modules (se houver frontend)
+node_modules/
+npm-debug.log
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Package files
+*.nupkg
+packages/

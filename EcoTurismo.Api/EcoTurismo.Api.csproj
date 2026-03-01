@@ -24,4 +24,8 @@
     <ProjectReference Include="..\EcoTurismo.Infra\EcoTurismo.Infra.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>

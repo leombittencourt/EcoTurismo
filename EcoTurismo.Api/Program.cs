@@ -1,4 +1,5 @@
 using EcoTurismo.Api.Authorization;
+using EcoTurismo.Api.Middleware;
 using EcoTurismo.Application.Auth;
 using EcoTurismo.Application.Interfaces;
 using EcoTurismo.Application.Services;
@@ -179,6 +180,9 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCors("FrontLocal");
+
+// ── Exception Handling Middleware (deve ser um dos primeiros) ──
+app.UseExceptionHandling();
 
 // ── Middleware ──
 app.UseAuthentication();

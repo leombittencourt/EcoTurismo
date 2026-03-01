@@ -2,6 +2,7 @@ namespace EcoTurismo.Application.DTOs;
 
 public record BannerDto(
     Guid Id,
+    Guid? MunicipioId,
     string? Titulo,
     string? Subtitulo,
     string ImagemUrl,
@@ -12,6 +13,7 @@ public record BannerDto(
 
 public record BannerCreateRequest
 {
+    public Guid? MunicipioId { get; init; }
     public string? Titulo { get; init; }
     public string? Subtitulo { get; init; }
     public string ImagemUrl { get; init; } = string.Empty;

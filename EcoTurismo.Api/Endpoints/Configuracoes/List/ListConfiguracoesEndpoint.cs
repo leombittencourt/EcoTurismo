@@ -15,7 +15,8 @@ public class ListConfiguracoesEndpoint : EndpointWithoutRequest<List<Configuraca
     public override void Configure()
     {
         Get("/api/configuracoes");
-        Policies(RolePolicies.AdminOrPrefeituraPolicy); // Apenas Admin ou Prefeitura podem ver configurações
+        AllowAnonymous();
+        //Policies(RolePolicies.AdminOrPrefeituraPolicy); // Apenas Admin ou Prefeitura podem ver configurações
     }
 
     public override async Task HandleAsync(CancellationToken ct)

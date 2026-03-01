@@ -26,7 +26,7 @@ public class ListBannersEndpoint : Endpoint<ListBannersRequest, List<BannerDto>>
 
         var data = await query
             .OrderBy(b => b.Ordem)
-            .Select(b => new BannerDto(b.Id, b.Titulo, b.Subtitulo, b.ImagemUrl, b.Link, b.Ordem, b.Ativo))
+            .Select(b => new BannerDto(b.Id, b.MunicipioId, b.Titulo, b.Subtitulo, b.ImagemUrl, b.Link, b.Ordem, b.Ativo))
             .ToListAsync(ct);
 
         await Send.OkAsync(data, ct);

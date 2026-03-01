@@ -33,7 +33,13 @@ public class CreateReservaEndpoint : Endpoint<CreateReservaRequest, ReservaDto>
             QuantidadePessoas = req.QuantidadePessoas,
         };
 
-        var reserva = await _service.CriarAsync(dto);
-        await Send.CreatedAtAsync<GetReservaEndpoint>(new { id = reserva.Id }, reserva, cancellation: ct);
+        var result = await _service.CriarAsync(dto);
+
+        if (!result.Success)
+        {
+            ThrowError(result.ErrorMessage!);
+        }
+
+        await Send.CreatedAtAsync<GetReservaEndpoint>(new { id = result.Data!.Id }, result.Data, cancellation: ct);
     }
 }

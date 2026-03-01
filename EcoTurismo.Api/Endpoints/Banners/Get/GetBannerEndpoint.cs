@@ -26,6 +26,6 @@ public class GetBannerEndpoint : Endpoint<GetBannerRequest, BannerDto>
             return;
         }
 
-        await Send.OkAsync(new BannerDto(b.Id, b.Titulo, b.Subtitulo, b.ImagemUrl, b.Link, b.Ordem, b.Ativo), ct);
+        await Send.OkAsync(new BannerDto(b.Id, b.MunicipioId, b.Titulo, b.Subtitulo, b.ImagemUrl, b.Link, b.Ordem, b.Ativo), ct);
     }
 }

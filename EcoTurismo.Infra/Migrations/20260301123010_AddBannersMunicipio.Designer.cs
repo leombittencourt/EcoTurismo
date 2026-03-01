@@ -3,6 +3,7 @@ using System;
 using EcoTurismo.Infra.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoTurismo.Infra.Migrations
 {
     [DbContext(typeof(EcoTurismoDbContext))]
-    partial class EcoTurismoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260301123010_AddBannersMunicipio")]
+    partial class AddBannersMunicipio
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -123,9 +126,6 @@ namespace EcoTurismo.Infra.Migrations
                         .HasColumnName("Link")
                         .HasComment("Link de redirecionamento ao clicar no banner");
 
-                    b.Property<Guid?>("MunicipioId")
-                        .HasColumnType("uuid");
-
                     b.Property<int>("Ordem")
                         .HasColumnType("integer")
                         .HasColumnName("Ordem")
@@ -148,9 +148,49 @@ namespace EcoTurismo.Infra.Migrations
 
                     b.HasKey("Id");
 
+                    b.ToTable("Banners", (string)null);
+                });
+
+            modelBuilder.Entity("EcoTurismo.Domain.Entities.BannerMunicipio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ImagemUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Link")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("MunicipioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Ordem")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Subtitulo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
                     b.HasIndex("MunicipioId");
 
-                    b.ToTable("Banners", (string)null);
+                    b.ToTable("BannersMunicipio");
                 });
 
             modelBuilder.Entity("EcoTurismo.Domain.Entities.ConfiguracaoSistema", b =>
@@ -684,11 +724,13 @@ namespace EcoTurismo.Infra.Migrations
                     b.Navigation("Municipio");
                 });
 
-            modelBuilder.Entity("EcoTurismo.Domain.Entities.Banner", b =>
+            modelBuilder.Entity("EcoTurismo.Domain.Entities.BannerMunicipio", b =>
                 {
                     b.HasOne("EcoTurismo.Domain.Entities.Municipio", "Municipio")
                         .WithMany("Banners")
-                        .HasForeignKey("MunicipioId");
+                        .HasForeignKey("MunicipioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Municipio");
                 });

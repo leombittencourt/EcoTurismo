@@ -16,4 +16,7 @@ public class Municipio
 
     [JsonIgnore]
     public ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();
+
+    [JsonIgnore]
+    public ICollection<Banner> Banners { get; set; } = new List<Banner>();
 }

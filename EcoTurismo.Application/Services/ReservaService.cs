@@ -27,7 +27,7 @@ public class ReservaService : IReservaService
             .ToListAsync();
     }
 
-    public async Task<ReservaDto> CriarAsync(ReservaCreateRequest request)
+    public async Task<ServiceResult<ReservaDto>> CriarAsync(ReservaCreateRequest request)
     {
         var strategy = _db.Database.CreateExecutionStrategy();
 
@@ -45,7 +45,7 @@ public class ReservaService : IReservaService
                     .SingleOrDefaultAsync(q => q.Id == request.QuiosqueId.Value);
 
                 if (quiosque is null)
-                    throw new InvalidOperationException("Quiosque não encontrado.");
+                    return ServiceResult<ReservaDto>.Error("Quiosque não encontrado.");
 
                 var ocupadoNaData = await _db.Reservas.AnyAsync(r =>
                     r.QuiosqueId == request.QuiosqueId.Value &&
@@ -55,7 +55,7 @@ public class ReservaService : IReservaService
                      r.Status == ReservaStatus.Validada));
 
                 if (ocupadoNaData)
-                    throw new InvalidOperationException($"Quiosque já está ocupado para a data {request.Data:dd/MM/yyyy}");
+                    return ServiceResult<ReservaDto>.Error($"Quiosque já está ocupado para a data {request.Data:dd/MM/yyyy}");
             }
 
             var reserva = new Reserva
@@ -85,7 +85,7 @@ public class ReservaService : IReservaService
             await _db.SaveChangesAsync();
             await tx.CommitAsync();
 
-            return MapToDto(reserva);
+            return ServiceResult<ReservaDto>.Ok(MapToDto(reserva));
         });
     }
 

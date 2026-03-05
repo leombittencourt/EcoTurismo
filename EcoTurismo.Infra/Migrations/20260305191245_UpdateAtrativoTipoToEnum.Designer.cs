@@ -3,6 +3,7 @@ using System;
 using EcoTurismo.Infra.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoTurismo.Infra.Migrations
 {
     [DbContext(typeof(EcoTurismoDbContext))]
-    partial class EcoTurismoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260305191245_UpdateAtrativoTipoToEnum")]
+    partial class UpdateAtrativoTipoToEnum
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,29 +48,15 @@ namespace EcoTurismo.Infra.Migrations
                         .HasColumnName("Descricao")
                         .HasComment("Descrição detalhada do atrativo");
 
-                    b.Property<string>("Endereco")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("Endereco")
-                        .HasComment("Endereço do atrativo");
+                    b.Property<string>("Imagem")
+                        .HasColumnType("text")
+                        .HasColumnName("Imagem")
+                        .HasComment("URL da imagem do atrativo");
 
-                    b.Property<decimal?>("Latitude")
-                        .HasPrecision(10, 7)
-                        .HasColumnType("numeric(10,7)")
-                        .HasColumnName("Latitude")
-                        .HasComment("Latitude do atrativo");
-
-                    b.Property<decimal?>("Longitude")
-                        .HasPrecision(10, 7)
-                        .HasColumnType("numeric(10,7)")
-                        .HasColumnName("Longitude")
-                        .HasComment("Longitude do atrativo");
-
-                    b.Property<string>("MapUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("MapUrl")
-                        .HasComment("URL do mapa (Google Maps, etc)");
+                    b.Property<string>("Imagens")
+                        .HasColumnType("text")
+                        .HasColumnName("Imagens")
+                        .HasComment("Array JSON de múltiplas imagens em base64");
 
                     b.Property<Guid>("MunicipioId")
                         .HasColumnType("uuid")

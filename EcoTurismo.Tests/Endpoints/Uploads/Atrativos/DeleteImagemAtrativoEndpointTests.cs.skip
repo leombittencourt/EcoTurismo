@@ -1,6 +1,7 @@
 using EcoTurismo.Api.Endpoints.Uploads.Atrativos;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Domain.Entities;
+using EcoTurismo.Domain.Enums;
 using EcoTurismo.Infra.Data;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -8,20 +9,20 @@ using System.Text.Json;
 
 namespace EcoTurismo.Tests.Endpoints.Uploads.Atrativos;
 
-public class SetImagemPrincipalEndpointTests : IDisposable
+public class DeleteImagemAtrativoEndpointTests : IDisposable
 {
     private readonly EcoTurismoDbContext _db;
-    private readonly SetImagemPrincipalEndpoint _endpoint;
+    private readonly DeleteImagemAtrativoEndpoint _endpoint;
     private readonly Guid _atrativoId;
 
-    public SetImagemPrincipalEndpointTests()
+    public DeleteImagemAtrativoEndpointTests()
     {
         var options = new DbContextOptionsBuilder<EcoTurismoDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
         _db = new EcoTurismoDbContext(options);
-        _endpoint = new SetImagemPrincipalEndpoint(_db);
+        _endpoint = new DeleteImagemAtrativoEndpoint(_db);
 
         // Seed data
         _atrativoId = Guid.NewGuid();
@@ -37,7 +38,7 @@ public class SetImagemPrincipalEndpointTests : IDisposable
             Id = _atrativoId,
             MunicipioId = municipio.Id,
             Nome = "Cachoeira do Sol",
-            Tipo = "cachoeira",
+            Tipo = TipoAtrativo.Cachoeira,
             CapacidadeMaxima = 100,
             Status = "ativo"
         };
@@ -48,7 +49,7 @@ public class SetImagemPrincipalEndpointTests : IDisposable
     }
 
     [Fact]
-    public async Task SetPrincipal_ImagemExistente_DeveMarcarComoPrincipal()
+    public async Task Delete_ImagemExistente_DeveRemoverComSucesso()
     {
         // Arrange
         var imagens = new List<ImagemAtrativoDto>
@@ -62,7 +63,7 @@ public class SetImagemPrincipalEndpointTests : IDisposable
         atrativo!.Imagens = JsonSerializer.Serialize(imagens);
         await _db.SaveChangesAsync();
 
-        var request = new SetImagemPrincipalRequest
+        var request = new DeleteImagemAtrativoRequest
         {
             AtrativoId = _atrativoId,
             ImagemId = "id2"
@@ -75,45 +76,12 @@ public class SetImagemPrincipalEndpointTests : IDisposable
         var atrativoAtualizado = await _db.Atrativos.FindAsync(_atrativoId);
         var imagensAtualizadas = JsonSerializer.Deserialize<List<ImagemAtrativoDto>>(atrativoAtualizado!.Imagens!);
 
-        imagensAtualizadas!.First(i => i.Id == "id2").Principal.Should().BeTrue();
-        imagensAtualizadas.First(i => i.Id == "id1").Principal.Should().BeFalse();
-        imagensAtualizadas.First(i => i.Id == "id3").Principal.Should().BeFalse();
+        imagensAtualizadas.Should().HaveCount(2);
+        imagensAtualizadas.Should().NotContain(i => i.Id == "id2");
     }
 
     [Fact]
-    public async Task SetPrincipal_AlterarDePrincipalParaOutra_DeveFuncionarCorretamente()
-    {
-        // Arrange
-        var imagens = new List<ImagemAtrativoDto>
-        {
-            new("id1", "data:image/jpeg;base64,abc", 1, false, "Foto 1"),
-            new("id2", "data:image/jpeg;base64,def", 2, true, "Foto 2"),
-            new("id3", "data:image/jpeg;base64,ghi", 3, false, "Foto 3")
-        };
-
-        var atrativo = await _db.Atrativos.FindAsync(_atrativoId);
-        atrativo!.Imagens = JsonSerializer.Serialize(imagens);
-        await _db.SaveChangesAsync();
-
-        var request = new SetImagemPrincipalRequest
-        {
-            AtrativoId = _atrativoId,
-            ImagemId = "id3"
-        };
-
-        // Act
-        await _endpoint.HandleAsync(request, CancellationToken.None);
-
-        // Assert
-        var atrativoAtualizado = await _db.Atrativos.FindAsync(_atrativoId);
-        var imagensAtualizadas = JsonSerializer.Deserialize<List<ImagemAtrativoDto>>(atrativoAtualizado!.Imagens!);
-
-        imagensAtualizadas!.First(i => i.Id == "id3").Principal.Should().BeTrue();
-        imagensAtualizadas.First(i => i.Id == "id2").Principal.Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task SetPrincipal_ApenaUmaImagemDeveSerPrincipal()
+    public async Task Delete_ImagemPrincipal_DeveMarcarProximaComoPrincipal()
     {
         // Arrange
         var imagens = new List<ImagemAtrativoDto>
@@ -127,10 +95,10 @@ public class SetImagemPrincipalEndpointTests : IDisposable
         atrativo!.Imagens = JsonSerializer.Serialize(imagens);
         await _db.SaveChangesAsync();
 
-        var request = new SetImagemPrincipalRequest
+        var request = new DeleteImagemAtrativoRequest
         {
             AtrativoId = _atrativoId,
-            ImagemId = "id2"
+            ImagemId = "id1" // Remover a principal
         };
 
         // Act
@@ -140,11 +108,39 @@ public class SetImagemPrincipalEndpointTests : IDisposable
         var atrativoAtualizado = await _db.Atrativos.FindAsync(_atrativoId);
         var imagensAtualizadas = JsonSerializer.Deserialize<List<ImagemAtrativoDto>>(atrativoAtualizado!.Imagens!);
 
-        imagensAtualizadas!.Count(i => i.Principal).Should().Be(1);
+        imagensAtualizadas.Should().HaveCount(2);
+        imagensAtualizadas!.First(i => i.Ordem == 2).Principal.Should().BeTrue(); // id2 virou principal
     }
 
     [Fact]
-    public async Task SetPrincipal_ImagemInexistente_DeveLancarErro()
+    public async Task Delete_UltimaImagem_DeveRetornarArrayVazio()
+    {
+        // Arrange
+        var imagens = new List<ImagemAtrativoDto>
+        {
+            new("id1", "data:image/jpeg;base64,abc", 1, true, "Única foto")
+        };
+
+        var atrativo = await _db.Atrativos.FindAsync(_atrativoId);
+        atrativo!.Imagens = JsonSerializer.Serialize(imagens);
+        await _db.SaveChangesAsync();
+
+        var request = new DeleteImagemAtrativoRequest
+        {
+            AtrativoId = _atrativoId,
+            ImagemId = "id1"
+        };
+
+        // Act
+        await _endpoint.HandleAsync(request, CancellationToken.None);
+
+        // Assert
+        var atrativoAtualizado = await _db.Atrativos.FindAsync(_atrativoId);
+        atrativoAtualizado!.Imagens.Should().Be("[]");
+    }
+
+    [Fact]
+    public async Task Delete_ImagemInexistente_DeveLancarErro()
     {
         // Arrange
         var imagens = new List<ImagemAtrativoDto>
@@ -156,7 +152,7 @@ public class SetImagemPrincipalEndpointTests : IDisposable
         atrativo!.Imagens = JsonSerializer.Serialize(imagens);
         await _db.SaveChangesAsync();
 
-        var request = new SetImagemPrincipalRequest
+        var request = new DeleteImagemAtrativoRequest
         {
             AtrativoId = _atrativoId,
             ImagemId = "id-inexistente"
@@ -169,10 +165,10 @@ public class SetImagemPrincipalEndpointTests : IDisposable
     }
 
     [Fact]
-    public async Task SetPrincipal_AtrativoSemImagens_DeveLancarErro()
+    public async Task Delete_AtrativoSemImagens_DeveLancarErro()
     {
         // Arrange
-        var request = new SetImagemPrincipalRequest
+        var request = new DeleteImagemAtrativoRequest
         {
             AtrativoId = _atrativoId,
             ImagemId = "id1"
@@ -185,10 +181,10 @@ public class SetImagemPrincipalEndpointTests : IDisposable
     }
 
     [Fact]
-    public async Task SetPrincipal_AtrativoInexistente_DeveLancarErro()
+    public async Task Delete_AtrativoInexistente_DeveLancarErro()
     {
         // Arrange
-        var request = new SetImagemPrincipalRequest
+        var request = new DeleteImagemAtrativoRequest
         {
             AtrativoId = Guid.NewGuid(),
             ImagemId = "id1"

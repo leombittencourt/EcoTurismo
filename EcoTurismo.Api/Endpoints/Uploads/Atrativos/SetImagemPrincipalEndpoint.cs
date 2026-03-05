@@ -1,9 +1,7 @@
 using EcoTurismo.Api.Authorization;
-using EcoTurismo.Application.DTOs;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace EcoTurismo.Api.Endpoints.Uploads.Atrativos;
 
@@ -39,24 +37,37 @@ public class SetImagemPrincipalEndpoint : Endpoint<SetImagemPrincipalRequest>
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(atrativo.Imagens))
+        var imagens = await _db.Imagens
+            .Where(i => i.EntidadeTipo == "Atrativo" && i.EntidadeId == req.AtrativoId)
+            .ToListAsync(ct);
+
+        if (!imagens.Any())
         {
             ThrowError("Atrativo não possui imagens.");
             return;
         }
 
-        var imagens = JsonSerializer.Deserialize<List<ImagemAtrativoDto>>(atrativo.Imagens) ?? new List<ImagemAtrativoDto>();
-
-        if (!imagens.Any(i => i.Id == req.ImagemId))
+        var imagemSelecionada = imagens.FirstOrDefault(i => i.Id == req.ImagemId);
+        if (imagemSelecionada is null)
         {
             ThrowError("Imagem não encontrada.");
             return;
         }
 
-        // Marcar apenas a imagem especificada como principal
-        imagens = imagens.Select(i => i with { Principal = i.Id == req.ImagemId }).ToList();
+        // Desmarcar todas as imagens
+        foreach (var img in imagens)
+        {
+            if (img.Categoria == "principal")
+            {
+                img.Categoria = "galeria";
+                img.UpdatedAt = DateTimeOffset.UtcNow;
+            }
+        }
 
-        atrativo.Imagens = JsonSerializer.Serialize(imagens);
+        // Marcar apenas a imagem especificada como principal
+        imagemSelecionada.Categoria = "principal";
+        imagemSelecionada.UpdatedAt = DateTimeOffset.UtcNow;
+
         atrativo.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _db.SaveChangesAsync(ct);

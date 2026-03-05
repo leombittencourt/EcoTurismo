@@ -46,7 +46,15 @@ public class ListAtrativosEndpoint : EndpointWithoutRequest<List<AtrativoDto>>
                     .Sum(r => r.QuantidadePessoas),
                 a.Status,
                 a.Descricao,
-                a.Imagem
+                a.Endereco,
+                a.Latitude,
+                a.Longitude,
+                a.MapUrl,
+                _db.Imagens
+                    .Where(i => i.EntidadeTipo == "Atrativo" && i.EntidadeId == a.Id && i.Categoria == "principal")
+                    .Select(i => i.ImagemUrl)
+                    .FirstOrDefault(),
+                null // Imagens não são retornadas na listagem por performance
             ))
             .ToListAsync(ct);
 

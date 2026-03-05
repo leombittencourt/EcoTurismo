@@ -29,13 +29,12 @@ public class GetAtrativoEndpointTests
         {
             Id = Guid.NewGuid(),
             Nome = "Balneário Teste",
-            Tipo = "balneario",
+            Tipo = TipoAtrativo.Balneario,
             MunicipioId = municipio.Id,
             CapacidadeMaxima = 100,
             OcupacaoAtual = 0,
             Status = "ativo",
             Descricao = "Descrição do balneário",
-            Imagem = null,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -90,7 +89,7 @@ public class GetAtrativoEndpointTests
         {
             Id = Guid.NewGuid(),
             Nome = "Balneário Teste",
-            Tipo = "balneario",
+            Tipo = TipoAtrativo.Balneario,
             MunicipioId = municipio.Id,
             CapacidadeMaxima = 100,
             OcupacaoAtual = 0,

@@ -1,6 +1,7 @@
 using EcoTurismo.Api.Endpoints.Uploads.Atrativos;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Domain.Entities;
+using EcoTurismo.Domain.Enums;
 using EcoTurismo.Infra.Data;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +38,7 @@ public class ReordenarImagensEndpointTests : IDisposable
             Id = _atrativoId,
             MunicipioId = municipio.Id,
             Nome = "Cachoeira do Sol",
-            Tipo = "cachoeira",
+            Tipo = TipoAtrativo.Cachoeira,
             CapacidadeMaxima = 100,
             Status = "ativo"
         };

@@ -4,6 +4,7 @@ using EcoTurismo.Api.Middleware;
 using EcoTurismo.Application.Auth;
 using EcoTurismo.Application.Interfaces;
 using EcoTurismo.Application.Services;
+using EcoTurismo.Application.Services.Interfaces;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
 using FastEndpoints.Swagger;
@@ -92,6 +93,15 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IOcupacaoService, OcupacaoService>();
+
+// ── Rate Limiting ──
+builder.Services.AddSingleton(sp => new EcoTurismo.Api.Services.RateLimitingService(
+    window: TimeSpan.FromMinutes(1),
+    maxRequests: 10
+));
+
+// ── Geocoding Service ──
+builder.Services.AddHttpClient<IGeocodingService, GoogleMapsGeocodingService>();
 
 // ── Image Storage ──
 builder.Services.AddSingleton<EcoTurismo.Application.Services.StorageProviderFactory>();

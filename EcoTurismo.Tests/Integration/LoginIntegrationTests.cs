@@ -1,5 +1,6 @@
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Application.Services;
+using EcoTurismo.Domain.Entities;
 using EcoTurismo.Tests.Helpers;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
@@ -24,7 +25,7 @@ public class LoginIntegrationTests
         var municipio = TestDataBuilder.CreateMunicipio();
         await context.Municipios.AddAsync(municipio);
 
-        var usuario = new Domain.Entities.Usuario
+        var usuario = new Usuario
         {
             Id = Guid.NewGuid(),
             Nome = "Admin Teste",
@@ -83,7 +84,7 @@ public class LoginIntegrationTests
         var role = TestDataBuilder.CreateRole();
         await context.Roles.AddAsync(role);
 
-        var usuario = new Domain.Entities.Usuario
+        var usuario = new Usuario
         {
             Id = Guid.NewGuid(),
             Nome = "Usuario Inativo",
@@ -129,7 +130,7 @@ public class LoginIntegrationTests
         var role = TestDataBuilder.CreateRole();
         await context.Roles.AddAsync(role);
 
-        var usuario = new Domain.Entities.Usuario
+        var usuario = new Usuario
         {
             Id = Guid.NewGuid(),
             Nome = "Usuario Teste",
@@ -175,7 +176,7 @@ public class LoginIntegrationTests
         var role = TestDataBuilder.CreateRole();
         await context.Roles.AddAsync(role);
 
-        var usuario = new Domain.Entities.Usuario
+        var usuario = new Usuario
         {
             Id = Guid.NewGuid(),
             Nome = "Usuario Teste",
@@ -222,7 +223,7 @@ public class LoginIntegrationTests
         var role = TestDataBuilder.CreateRole("Prefeitura");
         await context.Roles.AddAsync(role);
 
-        var permission1 = new Domain.Entities.Permission
+        var permission1 = new Permission
         {
             Id = Guid.NewGuid(),
             Name = "banners:create",
@@ -231,7 +232,7 @@ public class LoginIntegrationTests
             CreatedAt = DateTimeOffset.UtcNow
         };
 
-        var permission2 = new Domain.Entities.Permission
+        var permission2 = new Permission
         {
             Id = Guid.NewGuid(),
             Name = "banners:read",
@@ -242,14 +243,14 @@ public class LoginIntegrationTests
 
         await context.Permissions.AddRangeAsync(permission1, permission2);
 
-        var rolePermission1 = new Domain.Entities.RolePermission
+        var rolePermission1 = new RolePermission
         {
             RoleId = role.Id,
             PermissionId = permission1.Id,
             GrantedAt = DateTimeOffset.UtcNow
         };
 
-        var rolePermission2 = new Domain.Entities.RolePermission
+        var rolePermission2 = new RolePermission
         {
             RoleId = role.Id,
             PermissionId = permission2.Id,
@@ -258,7 +259,7 @@ public class LoginIntegrationTests
 
         await context.RolePermissions.AddRangeAsync(rolePermission1, rolePermission2);
 
-        var usuario = new Domain.Entities.Usuario
+        var usuario = new Usuario
         {
             Id = Guid.NewGuid(),
             Nome = "Prefeitura Teste",

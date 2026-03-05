@@ -6,4 +6,4 @@ public class ReordenarImagensRequest
     public List<ImagemOrdemDto> Imagens { get; set; } = new();
 }
 
-public record ImagemOrdemDto(string Id, int Ordem);
+public record ImagemOrdemDto(Guid Id, int Ordem);

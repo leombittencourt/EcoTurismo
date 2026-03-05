@@ -1,3 +1,4 @@
+using EcoTurismo.Domain.Enums;
 using FastEndpoints;
 using FluentValidation;
 
@@ -15,8 +16,8 @@ public class UpdateAtrativoValidator : Validator<UpdateAtrativoRequest>
             .When(x => x.Nome is not null);
 
         RuleFor(x => x.Tipo)
-            .MaximumLength(20).WithMessage("Tipo deve ter no máximo 20 caracteres")
-            .When(x => x.Tipo is not null);
+            .IsInEnum().WithMessage("Tipo de atrativo inválido")
+            .When(x => x.Tipo.HasValue);
 
         RuleFor(x => x.Status)
             .MaximumLength(20).WithMessage("Status deve ter no máximo 20 caracteres")

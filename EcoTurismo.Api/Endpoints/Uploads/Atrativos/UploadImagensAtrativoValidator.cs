@@ -16,8 +16,8 @@ public class UploadImagensAtrativoValidator : Validator<UploadImagensAtrativoReq
             .WithMessage("É necessário enviar pelo menos uma imagem.");
 
         RuleFor(x => x.Imagens)
-            .Must(imagens => imagens.Length <= 10)
-            .When(x => x.Imagens != null && x.Imagens.Length > 0)
+            .Must(imagens => imagens.Count <= 10)
+            .When(x => x.Imagens != null && x.Imagens.Count > 0)
             .WithMessage("Máximo de 10 imagens por upload.");
 
         RuleForEach(x => x.Imagens)
@@ -29,12 +29,12 @@ public class UploadImagensAtrativoValidator : Validator<UploadImagensAtrativoReq
             .WithMessage("Cada imagem não pode ter mais de 5MB.");
 
         RuleFor(x => x.Descricoes)
-            .Must((req, descricoes) => descricoes == null || descricoes.Length == req.Imagens.Length)
+            .Must((req, descricoes) => descricoes == null || descricoes.Length == req.Imagens.Count)
             .When(x => x.Descricoes != null)
             .WithMessage("Quantidade de descrições deve ser igual à quantidade de imagens.");
 
         RuleFor(x => x.Ordens)
-            .Must((req, ordens) => ordens == null || ordens.Length == req.Imagens.Length)
+            .Must((req, ordens) => ordens == null || ordens.Length == req.Imagens.Count)
             .When(x => x.Ordens != null)
             .WithMessage("Quantidade de ordens deve ser igual à quantidade de imagens.");
     }

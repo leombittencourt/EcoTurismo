@@ -21,7 +21,7 @@ public class UploadImagensAtrativoValidatorTests
         var request = new UploadImagensAtrativoRequest
         {
             AtrativoId = Guid.Empty,
-            Imagens = new[] { CreateFakeImageFile("test.jpg", 1024) }
+            Imagens = new List<IFormFile> { CreateFakeImageFile("test.jpg", 1024) }
         };
 
         // Act
@@ -38,7 +38,7 @@ public class UploadImagensAtrativoValidatorTests
         var request = new UploadImagensAtrativoRequest
         {
             AtrativoId = Guid.NewGuid(),
-            Imagens = Array.Empty<IFormFile>()
+            Imagens = new List<IFormFile>()
         };
 
         // Act
@@ -60,7 +60,7 @@ public class UploadImagensAtrativoValidatorTests
         var request = new UploadImagensAtrativoRequest
         {
             AtrativoId = Guid.NewGuid(),
-            Imagens = files
+            Imagens = files.ToList()
         };
 
         // Act
@@ -80,7 +80,7 @@ public class UploadImagensAtrativoValidatorTests
         var request = new UploadImagensAtrativoRequest
         {
             AtrativoId = Guid.NewGuid(),
-            Imagens = new[] { file }
+            Imagens = new List<IFormFile> { file }
         };
 
         // Act
@@ -100,7 +100,7 @@ public class UploadImagensAtrativoValidatorTests
         var request = new UploadImagensAtrativoRequest
         {
             AtrativoId = Guid.NewGuid(),
-            Imagens = new[] { file }
+            Imagens = new List<IFormFile> { file }
         };
 
         // Act
@@ -125,7 +125,7 @@ public class UploadImagensAtrativoValidatorTests
         var request = new UploadImagensAtrativoRequest
         {
             AtrativoId = Guid.NewGuid(),
-            Imagens = new[] { file }
+            Imagens = new List<IFormFile> { file }
         };
 
         // Act
@@ -142,7 +142,7 @@ public class UploadImagensAtrativoValidatorTests
         var request = new UploadImagensAtrativoRequest
         {
             AtrativoId = Guid.NewGuid(),
-            Imagens = new[]
+            Imagens = new List<IFormFile>
             {
                 CreateFakeImageFile("foto1.jpg", 1024),
                 CreateFakeImageFile("foto2.jpg", 1024)
@@ -165,7 +165,7 @@ public class UploadImagensAtrativoValidatorTests
         var request = new UploadImagensAtrativoRequest
         {
             AtrativoId = Guid.NewGuid(),
-            Imagens = new[]
+            Imagens = new List<IFormFile>
             {
                 CreateFakeImageFile("foto1.jpg", 1024),
                 CreateFakeImageFile("foto2.jpg", 1024)
@@ -188,7 +188,7 @@ public class UploadImagensAtrativoValidatorTests
         var request = new UploadImagensAtrativoRequest
         {
             AtrativoId = Guid.NewGuid(),
-            Imagens = new[]
+            Imagens = new List<IFormFile>
             {
                 CreateFakeImageFile("foto1.jpg", 1024),
                 CreateFakeImageFile("foto2.png", 2048)

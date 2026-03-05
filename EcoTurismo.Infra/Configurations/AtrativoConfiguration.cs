@@ -1,4 +1,5 @@
 using EcoTurismo.Domain.Entities;
+using EcoTurismo.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -28,22 +29,37 @@ public class AtrativoConfiguration : IEntityTypeConfiguration<Atrativo>
 
         builder.Property(a => a.Tipo)
             .HasColumnName("Tipo")
-            .HasComment("Tipo do atrativo (balneario, parque, etc.)")
+            .HasComment("Tipo do atrativo (balneario, cachoeira, trilha, parque, fazenda_ecoturismo)")
             .IsRequired()
-            .HasMaxLength(20);
+            .HasMaxLength(25)
+            .HasConversion(
+                v => v.ToStringValue(),
+                v => TipoAtrativoExtensions.FromString(v)
+            );
 
         builder.Property(a => a.Descricao)
             .HasColumnName("Descricao")
             .HasComment("Descrição detalhada do atrativo");
 
-        builder.Property(a => a.Imagem)
-            .HasColumnName("Imagem")
-            .HasComment("URL da imagem do atrativo");
+        builder.Property(a => a.Endereco)
+            .HasColumnName("Endereco")
+            .HasComment("Endereço do atrativo")
+            .HasMaxLength(500);
 
-        builder.Property(a => a.Imagens)
-            .HasColumnName("Imagens")
-            .HasComment("Array JSON de múltiplas imagens em base64")
-            .HasColumnType("text");
+        builder.Property(a => a.Latitude)
+            .HasColumnName("Latitude")
+            .HasComment("Latitude do atrativo")
+            .HasPrecision(10, 7);
+
+        builder.Property(a => a.Longitude)
+            .HasColumnName("Longitude")
+            .HasComment("Longitude do atrativo")
+            .HasPrecision(10, 7);
+
+        builder.Property(a => a.MapUrl)
+            .HasColumnName("MapUrl")
+            .HasComment("URL do mapa (Google Maps, etc)")
+            .HasMaxLength(1000);
 
         builder.Property(a => a.CapacidadeMaxima)
             .HasColumnName("CapacidadeMaxima")

@@ -1,5 +1,5 @@
 using EcoTurismo.Api.Authorization;
-using EcoTurismo.Application.DTOs;
+using EcoTurismo.Domain.Entities;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +24,7 @@ public class UploadImagensAtrativoEndpoint : Endpoint<UploadImagensAtrativoReque
         Description(d => d
             .WithTags("Uploads", "Atrativos")
             .WithSummary("Upload de múltiplas imagens para um atrativo")
-            .WithDescription("Converte arquivos para base64 e salva no campo Imagens como JSON array")
+            .WithDescription("Salva arquivos na tabela Imagens como base64")
             .Produces(200)
             .Produces(400)
             .Produces(404));
@@ -41,13 +41,13 @@ public class UploadImagensAtrativoEndpoint : Endpoint<UploadImagensAtrativoReque
             return;
         }
 
-        // Parse imagens existentes
-        var imagensExistentes = string.IsNullOrWhiteSpace(atrativo.Imagens)
-            ? new List<ImagemAtrativoDto>()
-            : JsonSerializer.Deserialize<List<ImagemAtrativoDto>>(atrativo.Imagens) ?? new List<ImagemAtrativoDto>();
+        // Buscar imagens existentes da tabela Imagens
+        var imagensExistentes = await _db.Imagens
+            .Where(i => i.EntidadeTipo == "Atrativo" && i.EntidadeId == req.AtrativoId)
+            .ToListAsync(ct);
 
         // Verificar limite total
-        if (imagensExistentes.Count + req.Imagens.Length > 20)
+        if (imagensExistentes.Count + req.Imagens.Count > 20)
         {
             ThrowError("Limite de 20 imagens por atrativo excedido.");
             return;
@@ -59,9 +59,9 @@ public class UploadImagensAtrativoEndpoint : Endpoint<UploadImagensAtrativoReque
             : 1;
 
         // Converter cada arquivo para base64
-        var novasImagens = new List<ImagemAtrativoDto>();
+        var novasImagens = new List<Imagem>();
 
-        for (int i = 0; i < req.Imagens.Length; i++)
+        for (int i = 0; i < req.Imagens.Count; i++)
         {
             var file = req.Imagens[i];
 
@@ -88,29 +88,49 @@ public class UploadImagensAtrativoEndpoint : Endpoint<UploadImagensAtrativoReque
                 ? req.Descricoes[i]
                 : null;
 
-            var imagemId = Guid.NewGuid().ToString();
-            var isPrincipal = req.PrincipalId == imagemId || (imagensExistentes.Count == 0 && i == 0);
+            var categoria = imagensExistentes.Count == 0 && i == 0 ? "principal" : "galeria";
 
-            novasImagens.Add(new ImagemAtrativoDto(
-                Id: imagemId,
-                Url: base64,
-                Ordem: ordem,
-                Principal: isPrincipal,
-                Descricao: descricao
-            ));
+            var metadados = JsonSerializer.Serialize(new
+            {
+                fileName = file.FileName,
+                contentType = file.ContentType,
+                size = file.Length,
+                descricao
+            });
+
+            var novaImagem = new Imagem
+            {
+                Id = Guid.NewGuid(),
+                EntidadeTipo = "Atrativo",
+                EntidadeId = req.AtrativoId,
+                Categoria = categoria,
+                ImagemUrl = base64,
+                StorageProvider = "base64",
+                Ordem = ordem,
+                MetadadosJson = metadados,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            };
+
+            novasImagens.Add(novaImagem);
         }
 
         // Se tem nova principal, desmarcar todas as antigas
-        if (novasImagens.Any(i => i.Principal))
+        if (novasImagens.Any(i => i.Categoria == "principal"))
         {
-            imagensExistentes = imagensExistentes.Select(i => i with { Principal = false }).ToList();
+            foreach (var img in imagensExistentes)
+            {
+                if (img.Categoria == "principal")
+                {
+                    img.Categoria = "galeria";
+                    img.UpdatedAt = DateTimeOffset.UtcNow;
+                }
+            }
         }
 
         // Adicionar novas imagens
-        imagensExistentes.AddRange(novasImagens);
+        await _db.Imagens.AddRangeAsync(novasImagens, ct);
 
-        // Salvar JSON atualizado
-        atrativo.Imagens = JsonSerializer.Serialize(imagensExistentes);
         atrativo.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _db.SaveChangesAsync(ct);

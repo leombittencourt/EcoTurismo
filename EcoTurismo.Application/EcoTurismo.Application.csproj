@@ -10,8 +10,8 @@
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.13" />
-    <PackageReference Include="SkiaSharp" Version="3.117.0" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.117.0" />
+    <PackageReference Include="SkiaSharp" Version="3.119.0" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.0" />
   </ItemGroup>
 
   <ItemGroup>

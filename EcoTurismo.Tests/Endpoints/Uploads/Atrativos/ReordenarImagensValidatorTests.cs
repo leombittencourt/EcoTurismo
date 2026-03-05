@@ -22,7 +22,7 @@ public class ReordenarImagensValidatorTests
             AtrativoId = Guid.Empty,
             Imagens = new List<ImagemOrdemDto>
             {
-                new("id1", 1)
+                new(Guid.NewGuid(), 1)
             }
         };
 
@@ -60,7 +60,7 @@ public class ReordenarImagensValidatorTests
             AtrativoId = Guid.NewGuid(),
             Imagens = new List<ImagemOrdemDto>
             {
-                new("", 1)
+                new(Guid.Empty, 1)
             }
         };
 
@@ -81,8 +81,8 @@ public class ReordenarImagensValidatorTests
             AtrativoId = Guid.NewGuid(),
             Imagens = new List<ImagemOrdemDto>
             {
-                new("id1", 0),
-                new("id2", -1)
+                new(Guid.NewGuid(), 0),
+                new(Guid.NewGuid(), -1)
             }
         };
 
@@ -105,9 +105,9 @@ public class ReordenarImagensValidatorTests
             AtrativoId = Guid.NewGuid(),
             Imagens = new List<ImagemOrdemDto>
             {
-                new("id1", 1),
-                new("id2", 2),
-                new("id3", 3)
+                new(Guid.NewGuid(), 1),
+                new(Guid.NewGuid(), 2),
+                new(Guid.NewGuid(), 3)
             }
         };
 
@@ -127,9 +127,9 @@ public class ReordenarImagensValidatorTests
             AtrativoId = Guid.NewGuid(),
             Imagens = new List<ImagemOrdemDto>
             {
-                new("id1", 10),
-                new("id2", 5),
-                new("id3", 1)
+                new(Guid.NewGuid(), 10),
+                new(Guid.NewGuid(), 5),
+                new(Guid.NewGuid(), 1)
             }
         };
 

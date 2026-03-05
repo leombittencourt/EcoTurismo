@@ -16,7 +16,7 @@ public class ReordenarImagensValidator : Validator<ReordenarImagensRequest>
             .WithMessage("É necessário enviar pelo menos uma imagem para reordenar.");
 
         RuleForEach(x => x.Imagens)
-            .Must(img => !string.IsNullOrWhiteSpace(img.Id))
+            .Must(img => img.Id != Guid.Empty)
             .WithMessage("Cada imagem deve ter um ID válido.");
 
         RuleForEach(x => x.Imagens)

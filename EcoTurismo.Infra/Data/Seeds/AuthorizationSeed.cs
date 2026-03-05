@@ -1,4 +1,5 @@
 using EcoTurismo.Domain.Entities;
+using EcoTurismo.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -208,10 +209,13 @@ public static class AuthorizationSeed
         {
             Id = Guid.NewGuid(),
             Nome = "Balneário Municipal",
-            Tipo = "balneario",
+            Tipo = TipoAtrativo.Balneario,
             Descricao = "O Balneário Municipal de Rio Verde de Mato Grosso é um dos principais atrativos turísticos da região. Com águas cristalinas e infraestrutura completa, oferece lazer e diversão para toda a família. O local conta com piscinas naturais, áreas de camping, quiosques e playground.",
             MunicipioId = municipioBase.Id,
-            Imagem = "https://via.placeholder.com/800x600?text=Balneario+Municipal",
+            Endereco = "Rod. MS-352, Km 12 - Zona Rural, Rio Verde de Mato Grosso - MS",
+            Latitude = -18.9186m,
+            Longitude = -54.8428m,
+            MapUrl = "https://maps.google.com/?q=-18.9186,-54.8428",
             Status = "ativo",
             CapacidadeMaxima = 500,
             OcupacaoAtual = 0,
@@ -222,6 +226,25 @@ public static class AuthorizationSeed
         await context.Atrativos.AddAsync(atrativoInicial);
         await context.SaveChangesAsync();
         Console.WriteLine($"   ✅ Atrativo inicial criado: {atrativoInicial.Nome}");
+
+        // 4.2. Criar Imagem Inicial para o Atrativo
+        var imagemInicial = new Imagem
+        {
+            Id = Guid.NewGuid(),
+            EntidadeTipo = "Atrativo",
+            EntidadeId = atrativoInicial.Id,
+            Categoria = "principal",
+            ImagemUrl = "https://via.placeholder.com/800x600?text=Balneario+Municipal",
+            StorageProvider = "url",
+            Ordem = 1,
+            MetadadosJson = "{}",
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        await context.Imagens.AddAsync(imagemInicial);
+        await context.SaveChangesAsync();
+        Console.WriteLine($"   ✅ Imagem inicial criada para o atrativo");
 
         // 5. Criar Usuários Default (senha: admin123)
         Console.WriteLine("   🔐 Gerando hash de senha para usuários default...");

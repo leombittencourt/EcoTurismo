@@ -1,3 +1,5 @@
+using EcoTurismo.Domain.Enums;
+
 namespace EcoTurismo.Domain.Entities;
 
 public class Atrativo
@@ -5,10 +7,12 @@ public class Atrativo
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid MunicipioId { get; set; }
     public string Nome { get; set; } = string.Empty;
-    public string Tipo { get; set; } = "balneario";
+    public TipoAtrativo Tipo { get; set; } = TipoAtrativo.Balneario;
     public string? Descricao { get; set; }
-    public string? Imagem { get; set; }
-    public string? Imagens { get; set; }
+    public string? Endereco { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
+    public string? MapUrl { get; set; }
     public int CapacidadeMaxima { get; set; }
     public int OcupacaoAtual { get; set; }
     public string Status { get; set; } = "ativo";

@@ -1,9 +1,7 @@
 using EcoTurismo.Api.Authorization;
-using EcoTurismo.Application.DTOs;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace EcoTurismo.Api.Endpoints.Uploads.Atrativos;
 
@@ -40,13 +38,15 @@ public class ReordenarImagensEndpoint : Endpoint<ReordenarImagensRequest>
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(atrativo.Imagens))
+        var imagens = await _db.Imagens
+            .Where(i => i.EntidadeTipo == "Atrativo" && i.EntidadeId == req.AtrativoId)
+            .ToListAsync(ct);
+
+        if (!imagens.Any())
         {
             ThrowError("Atrativo não possui imagens.");
             return;
         }
-
-        var imagens = JsonSerializer.Deserialize<List<ImagemAtrativoDto>>(atrativo.Imagens) ?? new List<ImagemAtrativoDto>();
 
         // Verificar se todos os IDs existem
         var idsInvalidos = req.Imagens.Where(r => !imagens.Any(i => i.Id == r.Id)).ToList();
@@ -57,13 +57,13 @@ public class ReordenarImagensEndpoint : Endpoint<ReordenarImagensRequest>
         }
 
         // Atualizar ordens
-        imagens = imagens.Select(img =>
+        foreach (var reordenacao in req.Imagens)
         {
-            var novaOrdem = req.Imagens.FirstOrDefault(r => r.Id == img.Id);
-            return novaOrdem != null ? img with { Ordem = novaOrdem.Ordem } : img;
-        }).OrderBy(i => i.Ordem).ToList();
+            var imagem = imagens.First(i => i.Id == reordenacao.Id);
+            imagem.Ordem = reordenacao.Ordem;
+            imagem.UpdatedAt = DateTimeOffset.UtcNow;
+        }
 
-        atrativo.Imagens = JsonSerializer.Serialize(imagens);
         atrativo.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _db.SaveChangesAsync(ct);

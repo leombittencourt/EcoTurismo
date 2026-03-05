@@ -1,9 +1,7 @@
 using EcoTurismo.Api.Authorization;
-using EcoTurismo.Application.DTOs;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace EcoTurismo.Api.Endpoints.Uploads.Atrativos;
 
@@ -23,7 +21,7 @@ public class DeleteImagemAtrativoEndpoint : Endpoint<DeleteImagemAtrativoRequest
         Description(d => d
             .WithTags("Uploads", "Atrativos")
             .WithSummary("Remove uma imagem específica do atrativo")
-            .WithDescription("Remove a imagem do JSON array e reorganiza se necessário")
+            .WithDescription("Remove a imagem da tabela Imagens e reorganiza se necessário")
             .Produces(200)
             .Produces(404));
     }
@@ -39,31 +37,37 @@ public class DeleteImagemAtrativoEndpoint : Endpoint<DeleteImagemAtrativoRequest
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(atrativo.Imagens))
-        {
-            ThrowError("Atrativo não possui imagens.");
-            return;
-        }
+        var imagemRemover = await _db.Imagens
+            .FirstOrDefaultAsync(i => 
+                i.Id == req.ImagemId && 
+                i.EntidadeTipo == "Atrativo" && 
+                i.EntidadeId == req.AtrativoId, ct);
 
-        var imagens = JsonSerializer.Deserialize<List<ImagemAtrativoDto>>(atrativo.Imagens) ?? new List<ImagemAtrativoDto>();
-
-        var imagemRemover = imagens.FirstOrDefault(i => i.Id == req.ImagemId);
         if (imagemRemover is null)
         {
             ThrowError("Imagem não encontrada.");
             return;
         }
 
-        imagens.Remove(imagemRemover);
+        var eraPrincipal = imagemRemover.Categoria == "principal";
 
-        // Se removeu a principal e ainda há imagens, marcar primeira como principal
-        if (imagemRemover.Principal && imagens.Count > 0)
+        _db.Imagens.Remove(imagemRemover);
+
+        // Se removeu a principal, marcar primeira como principal
+        if (eraPrincipal)
         {
-            var primeira = imagens.OrderBy(i => i.Ordem).First();
-            imagens = imagens.Select(i => i.Id == primeira.Id ? i with { Principal = true } : i).ToList();
+            var primeiraImagem = await _db.Imagens
+                .Where(i => i.EntidadeTipo == "Atrativo" && i.EntidadeId == req.AtrativoId)
+                .OrderBy(i => i.Ordem)
+                .FirstOrDefaultAsync(ct);
+
+            if (primeiraImagem is not null)
+            {
+                primeiraImagem.Categoria = "principal";
+                primeiraImagem.UpdatedAt = DateTimeOffset.UtcNow;
+            }
         }
 
-        atrativo.Imagens = imagens.Count > 0 ? JsonSerializer.Serialize(imagens) : "[]";
         atrativo.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _db.SaveChangesAsync(ct);

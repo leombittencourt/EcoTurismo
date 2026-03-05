@@ -1,21 +1,11 @@
-namespace EcoTurismo.Application.DTOs;
+using EcoTurismo.Domain.Enums;
 
-public record AtrativoDto(
-    Guid Id,
-    string Nome,
-    string Tipo,
-    Guid MunicipioId,
-    int CapacidadeMaxima,
-    int OcupacaoAtual,
-    string Status,
-    string? Descricao,
-    string? Imagem
-);
+namespace EcoTurismo.Application.DTOs;
 
 public record AtrativoUpdateRequest
 {
     public string? Nome { get; init; }
-    public string? Tipo { get; init; }
+    public TipoAtrativo? Tipo { get; init; }
     public string? Descricao { get; init; }
     public string? Imagem { get; init; }
     public int? CapacidadeMaxima { get; init; }

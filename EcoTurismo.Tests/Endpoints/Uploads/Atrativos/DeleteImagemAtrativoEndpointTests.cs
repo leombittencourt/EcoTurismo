@@ -1,0 +1,203 @@
+using EcoTurismo.Api.Endpoints.Uploads.Atrativos;
+using EcoTurismo.Application.DTOs;
+using EcoTurismo.Domain.Entities;
+using EcoTurismo.Infra.Data;
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+
+namespace EcoTurismo.Tests.Endpoints.Uploads.Atrativos;
+
+public class DeleteImagemAtrativoEndpointTests : IDisposable
+{
+    private readonly EcoTurismoDbContext _db;
+    private readonly DeleteImagemAtrativoEndpoint _endpoint;
+    private readonly Guid _atrativoId;
+
+    public DeleteImagemAtrativoEndpointTests()
+    {
+        var options = new DbContextOptionsBuilder<EcoTurismoDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        _db = new EcoTurismoDbContext(options);
+        _endpoint = new DeleteImagemAtrativoEndpoint(_db);
+
+        // Seed data
+        _atrativoId = Guid.NewGuid();
+        var municipio = new Municipio
+        {
+            Id = Guid.NewGuid(),
+            Nome = "São Paulo",
+            Uf = "SP"
+        };
+
+        var atrativo = new Atrativo
+        {
+            Id = _atrativoId,
+            MunicipioId = municipio.Id,
+            Nome = "Cachoeira do Sol",
+            Tipo = "cachoeira",
+            CapacidadeMaxima = 100,
+            Status = "ativo"
+        };
+
+        _db.Municipios.Add(municipio);
+        _db.Atrativos.Add(atrativo);
+        _db.SaveChanges();
+    }
+
+    [Fact]
+    public async Task Delete_ImagemExistente_DeveRemoverComSucesso()
+    {
+        // Arrange
+        var imagens = new List<ImagemAtrativoDto>
+        {
+            new("id1", "data:image/jpeg;base64,abc", 1, true, "Foto 1"),
+            new("id2", "data:image/jpeg;base64,def", 2, false, "Foto 2"),
+            new("id3", "data:image/jpeg;base64,ghi", 3, false, "Foto 3")
+        };
+
+        var atrativo = await _db.Atrativos.FindAsync(_atrativoId);
+        atrativo!.Imagens = JsonSerializer.Serialize(imagens);
+        await _db.SaveChangesAsync();
+
+        var request = new DeleteImagemAtrativoRequest
+        {
+            AtrativoId = _atrativoId,
+            ImagemId = "id2"
+        };
+
+        // Act
+        await _endpoint.HandleAsync(request, CancellationToken.None);
+
+        // Assert
+        var atrativoAtualizado = await _db.Atrativos.FindAsync(_atrativoId);
+        var imagensAtualizadas = JsonSerializer.Deserialize<List<ImagemAtrativoDto>>(atrativoAtualizado!.Imagens!);
+
+        imagensAtualizadas.Should().HaveCount(2);
+        imagensAtualizadas.Should().NotContain(i => i.Id == "id2");
+    }
+
+    [Fact]
+    public async Task Delete_ImagemPrincipal_DeveMarcarProximaComoPrincipal()
+    {
+        // Arrange
+        var imagens = new List<ImagemAtrativoDto>
+        {
+            new("id1", "data:image/jpeg;base64,abc", 1, true, "Foto 1"),
+            new("id2", "data:image/jpeg;base64,def", 2, false, "Foto 2"),
+            new("id3", "data:image/jpeg;base64,ghi", 3, false, "Foto 3")
+        };
+
+        var atrativo = await _db.Atrativos.FindAsync(_atrativoId);
+        atrativo!.Imagens = JsonSerializer.Serialize(imagens);
+        await _db.SaveChangesAsync();
+
+        var request = new DeleteImagemAtrativoRequest
+        {
+            AtrativoId = _atrativoId,
+            ImagemId = "id1" // Remover a principal
+        };
+
+        // Act
+        await _endpoint.HandleAsync(request, CancellationToken.None);
+
+        // Assert
+        var atrativoAtualizado = await _db.Atrativos.FindAsync(_atrativoId);
+        var imagensAtualizadas = JsonSerializer.Deserialize<List<ImagemAtrativoDto>>(atrativoAtualizado!.Imagens!);
+
+        imagensAtualizadas.Should().HaveCount(2);
+        imagensAtualizadas!.First(i => i.Ordem == 2).Principal.Should().BeTrue(); // id2 virou principal
+    }
+
+    [Fact]
+    public async Task Delete_UltimaImagem_DeveRetornarArrayVazio()
+    {
+        // Arrange
+        var imagens = new List<ImagemAtrativoDto>
+        {
+            new("id1", "data:image/jpeg;base64,abc", 1, true, "Única foto")
+        };
+
+        var atrativo = await _db.Atrativos.FindAsync(_atrativoId);
+        atrativo!.Imagens = JsonSerializer.Serialize(imagens);
+        await _db.SaveChangesAsync();
+
+        var request = new DeleteImagemAtrativoRequest
+        {
+            AtrativoId = _atrativoId,
+            ImagemId = "id1"
+        };
+
+        // Act
+        await _endpoint.HandleAsync(request, CancellationToken.None);
+
+        // Assert
+        var atrativoAtualizado = await _db.Atrativos.FindAsync(_atrativoId);
+        atrativoAtualizado!.Imagens.Should().Be("[]");
+    }
+
+    [Fact]
+    public async Task Delete_ImagemInexistente_DeveLancarErro()
+    {
+        // Arrange
+        var imagens = new List<ImagemAtrativoDto>
+        {
+            new("id1", "data:image/jpeg;base64,abc", 1, true, "Foto 1")
+        };
+
+        var atrativo = await _db.Atrativos.FindAsync(_atrativoId);
+        atrativo!.Imagens = JsonSerializer.Serialize(imagens);
+        await _db.SaveChangesAsync();
+
+        var request = new DeleteImagemAtrativoRequest
+        {
+            AtrativoId = _atrativoId,
+            ImagemId = "id-inexistente"
+        };
+
+        // Act & Assert
+        var act = async () => await _endpoint.HandleAsync(request, CancellationToken.None);
+        await act.Should().ThrowAsync<Exception>()
+            .WithMessage("*não encontrada*");
+    }
+
+    [Fact]
+    public async Task Delete_AtrativoSemImagens_DeveLancarErro()
+    {
+        // Arrange
+        var request = new DeleteImagemAtrativoRequest
+        {
+            AtrativoId = _atrativoId,
+            ImagemId = "id1"
+        };
+
+        // Act & Assert
+        var act = async () => await _endpoint.HandleAsync(request, CancellationToken.None);
+        await act.Should().ThrowAsync<Exception>()
+            .WithMessage("*não possui imagens*");
+    }
+
+    [Fact]
+    public async Task Delete_AtrativoInexistente_DeveLancarErro()
+    {
+        // Arrange
+        var request = new DeleteImagemAtrativoRequest
+        {
+            AtrativoId = Guid.NewGuid(),
+            ImagemId = "id1"
+        };
+
+        // Act & Assert
+        var act = async () => await _endpoint.HandleAsync(request, CancellationToken.None);
+        await act.Should().ThrowAsync<Exception>()
+            .WithMessage("*não encontrado*");
+    }
+
+    public void Dispose()
+    {
+        _db.Database.EnsureDeleted();
+        _db.Dispose();
+    }
+}

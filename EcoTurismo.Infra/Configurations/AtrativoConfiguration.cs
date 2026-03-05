@@ -40,6 +40,11 @@ public class AtrativoConfiguration : IEntityTypeConfiguration<Atrativo>
             .HasColumnName("Imagem")
             .HasComment("URL da imagem do atrativo");
 
+        builder.Property(a => a.Imagens)
+            .HasColumnName("Imagens")
+            .HasComment("Array JSON de múltiplas imagens em base64")
+            .HasColumnType("text");
+
         builder.Property(a => a.CapacidadeMaxima)
             .HasColumnName("CapacidadeMaxima")
             .HasComment("Capacidade máxima de visitantes");

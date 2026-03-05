@@ -1,3 +1,4 @@
+using EcoTurismo.Api.Helpers;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
@@ -19,10 +20,14 @@ public class ListMunicipiosEndpoint : EndpointWithoutRequest<List<MunicipioDto>>
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var data = await _db.Municipios
+        var municipios = await _db.Municipios
+            .Include(m => m.Logo)
+            .Include(m => m.LogoTelaLogin)
+            .Include(m => m.LogoAreaPublica)
             .OrderBy(m => m.Nome)
-            .Select(m => new MunicipioDto(m.Id, m.Nome, m.Uf, m.Logo))
             .ToListAsync(ct);
+
+        var data = municipios.Select(m => m.ToDto()).ToList();
 
         await Send.OkAsync(data, ct);
     }

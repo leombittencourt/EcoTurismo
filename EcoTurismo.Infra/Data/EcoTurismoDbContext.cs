@@ -19,6 +19,7 @@ public class EcoTurismoDbContext : DbContext
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<Imagem> Imagens => Set<Imagem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

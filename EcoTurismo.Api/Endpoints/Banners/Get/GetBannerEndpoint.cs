@@ -1,6 +1,8 @@
+using EcoTurismo.Api.Helpers;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
+using Microsoft.EntityFrameworkCore;
 
 namespace EcoTurismo.Api.Endpoints.Banners;
 
@@ -18,14 +20,16 @@ public class GetBannerEndpoint : Endpoint<GetBannerRequest, BannerDto>
 
     public override async Task HandleAsync(GetBannerRequest req, CancellationToken ct)
     {
-        var b = await _db.Banners.FindAsync([req.Id], ct);
+        var banner = await _db.Banners
+            .Include(b => b.Imagem)
+            .FirstOrDefaultAsync(b => b.Id == req.Id, ct);
 
-        if (b is null)
+        if (banner is null)
         {
             await Send.NotFoundAsync(ct);
             return;
         }
 
-        await Send.OkAsync(new BannerDto(b.Id, b.MunicipioId, b.Titulo, b.Subtitulo, b.ImagemUrl, b.Link, b.Ordem, b.Ativo), ct);
+        await Send.OkAsync(banner.ToDto(), ct);
     }
 }

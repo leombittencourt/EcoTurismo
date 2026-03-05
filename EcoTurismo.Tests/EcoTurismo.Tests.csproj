@@ -29,4 +29,8 @@
     <ProjectReference Include="..\EcoTurismo.Domain\EcoTurismo.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Endpoints\Reservas\" />
+  </ItemGroup>
+
 </Project>

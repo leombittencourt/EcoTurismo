@@ -93,6 +93,15 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IOcupacaoService, OcupacaoService>();
 
+// ── Image Storage ──
+builder.Services.AddSingleton<EcoTurismo.Application.Services.StorageProviderFactory>();
+builder.Services.AddScoped<EcoTurismo.Application.Interfaces.IStorageProvider>(sp =>
+{
+    var factory = sp.GetRequiredService<EcoTurismo.Application.Services.StorageProviderFactory>();
+    return factory.Create();
+});
+builder.Services.AddScoped<IImageService, EcoTurismo.Application.Services.ImageService>();
+
 // ── Background Jobs ──
 builder.Services.AddHostedService<ReconciliacaoOcupacaoJob>();
 

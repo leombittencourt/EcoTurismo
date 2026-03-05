@@ -1,5 +1,7 @@
 using EcoTurismo.Api.Authorization;
+using EcoTurismo.Api.Helpers;
 using EcoTurismo.Application.DTOs;
+using EcoTurismo.Application.Interfaces;
 using EcoTurismo.Domain.Entities;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
@@ -10,10 +12,12 @@ namespace EcoTurismo.Api.Endpoints.Uploads;
 public class UploadBannerEndpoint : Endpoint<UploadBannerRequest, BannerDto>
 {
     private readonly EcoTurismoDbContext _db;
+    private readonly IImageService _imageService;
 
-    public UploadBannerEndpoint(EcoTurismoDbContext db)
+    public UploadBannerEndpoint(EcoTurismoDbContext db, IImageService imageService)
     {
         _db = db;
+        _imageService = imageService;
     }
 
     public override void Configure()
@@ -23,7 +27,7 @@ public class UploadBannerEndpoint : Endpoint<UploadBannerRequest, BannerDto>
         AllowFileUploads();
         Description(d => d
             .WithTags("Uploads", "Banners")
-            .WithSummary("Upload de banner (converte para base64 automaticamente)")
+            .WithSummary("Upload de banner com imagem")
             .Produces<BannerDto>(201)
             .Produces(400)
             .Produces(404));
@@ -44,25 +48,6 @@ public class UploadBannerEndpoint : Endpoint<UploadBannerRequest, BannerDto>
             }
         }
 
-        // Converter IFormFile para base64
-        string imagemBase64;
-        try
-        {
-            using var memoryStream = new MemoryStream();
-            await req.Imagem.CopyToAsync(memoryStream, ct);
-            var bytes = memoryStream.ToArray();
-            var base64String = Convert.ToBase64String(bytes);
-
-            // Criar o formato data URI completo
-            var contentType = req.Imagem.ContentType;
-            imagemBase64 = $"data:{contentType};base64,{base64String}";
-        }
-        catch (Exception ex)
-        {
-            ThrowError($"Erro ao processar a imagem: {ex.Message}");
-            return;
-        }
-
         // Determinar a ordem
         var query = _db.Banners.AsQueryable();
         if (req.MunicipioId.HasValue)
@@ -70,14 +55,13 @@ public class UploadBannerEndpoint : Endpoint<UploadBannerRequest, BannerDto>
 
         var maxOrdem = await query.MaxAsync(b => (int?)b.Ordem, ct) ?? 0;
 
-        // Criar banner com a imagem base64
+        // Criar o banner primeiro (sem imagem)
         var banner = new Banner
         {
             Id = Guid.NewGuid(),
             MunicipioId = req.MunicipioId,
             Titulo = req.Titulo,
             Subtitulo = req.Subtitulo,
-            ImagemUrl = imagemBase64, // Salvar o base64 completo com data URI
             Link = req.Link,
             Ordem = req.Ordem ?? maxOrdem + 1,
             Ativo = req.Ativo ?? true,
@@ -88,19 +72,54 @@ public class UploadBannerEndpoint : Endpoint<UploadBannerRequest, BannerDto>
         _db.Banners.Add(banner);
         await _db.SaveChangesAsync(ct);
 
-        var dto = new BannerDto(
-            banner.Id,
-            banner.MunicipioId,
-            banner.Titulo,
-            banner.Subtitulo,
-            banner.ImagemUrl,
-            banner.Link,
-            banner.Ordem,
-            banner.Ativo
-        );
+        // Fazer upload da imagem usando IImageService
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            await req.Imagem.CopyToAsync(memoryStream, ct);
+            var bytes = memoryStream.ToArray();
+
+            var uploadRequest = new ImagemUploadRequest(
+                EntidadeTipo: "Banner",
+                EntidadeId: banner.Id,
+                Categoria: "principal",
+                ImagemBytes: bytes,
+                NomeArquivo: req.Imagem.FileName,
+                TipoMime: req.Imagem.ContentType,
+                Ordem: 0
+            );
+
+            var result = await _imageService.SalvarImagemAsync(uploadRequest);
+
+            if (!result.Success)
+            {
+                // Reverter criação do banner se falhar o upload da imagem
+                _db.Banners.Remove(banner);
+                await _db.SaveChangesAsync(ct);
+                ThrowError($"Erro ao processar a imagem: {result.ErrorMessage}");
+                return;
+            }
+
+            // Atualizar banner com a referência da imagem
+            banner.ImagemId = result.Data!.Id;
+            await _db.SaveChangesAsync(ct);
+
+            // Recarregar banner com imagem incluída
+            banner = (await _db.Banners
+                .Include(b => b.Imagem)
+                .FirstOrDefaultAsync(b => b.Id == banner.Id, ct))!;
+        }
+        catch (Exception ex)
+        {
+            // Reverter criação do banner em caso de erro
+            _db.Banners.Remove(banner);
+            await _db.SaveChangesAsync(ct);
+            ThrowError($"Erro ao processar a imagem: {ex.Message}");
+            return;
+        }
 
         HttpContext.Response.StatusCode = 201;
         HttpContext.Response.Headers.Add("Location", $"/api/banners/{banner.Id}");
-        await Send.OkAsync(dto, ct);
+        await Send.OkAsync(banner.ToDto(), ct);
     }
 }

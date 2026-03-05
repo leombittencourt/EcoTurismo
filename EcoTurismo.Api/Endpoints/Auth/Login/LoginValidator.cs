@@ -9,9 +9,11 @@ public class LoginValidator : Validator<LoginRequest>
     {
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email é obrigatório")
-            .EmailAddress().WithMessage("Email inválido");
+            .Matches(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+            .WithMessage("Email inválido");
 
         RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Senha é obrigatória");
+            .NotEmpty().WithMessage("Senha é obrigatória")
+            .MinimumLength(3).WithMessage("Senha deve ter no mínimo 3 caracteres");
     }
 }

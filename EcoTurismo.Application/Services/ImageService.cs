@@ -8,9 +8,7 @@ using EcoTurismo.Infra.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Processing;
+using SkiaSharp;
 
 namespace EcoTurismo.Application.Services;
 
@@ -69,16 +67,20 @@ public class ImageService : IImageService
     {
         try
         {
-            using var imageStream = new MemoryStream(imagemBytes);
-            using var image = await Image.LoadAsync(imageStream);
+            using var bitmap = SKBitmap.Decode(imagemBytes);
+
+            if (bitmap == null)
+            {
+                return ServiceResult<ImagemProcessadaResult>.Error("Não foi possível decodificar a imagem");
+            }
 
             var metadados = new ImageMetadata
             {
                 NomeArquivo = nomeArquivo,
                 TamanhoBytes = imagemBytes.Length,
                 TipoMime = tipoMime,
-                LarguraOriginal = image.Width,
-                AlturaOriginal = image.Height,
+                LarguraOriginal = bitmap.Width,
+                AlturaOriginal = bitmap.Height,
                 DataUpload = DateTimeOffset.UtcNow,
                 HashMd5 = CalcularMd5Hash(imagemBytes),
                 StorageProvider = _storageProvider.ProviderName ?? "base64"
@@ -96,7 +98,7 @@ public class ImageService : IImageService
             // Gerar e salvar thumbnail se solicitado
             if (gerarThumbnail)
             {
-                var thumbnailBytes = await GerarThumbnailBytesAsync(image, tipoMime);
+                var thumbnailBytes = GerarThumbnailBytes(bitmap, tipoMime);
                 if (thumbnailBytes.HasValue)
                 {
                     var thumbnailFileName = $"thumb_{nomeArquivo}";
@@ -122,8 +124,8 @@ public class ImageService : IImageService
                 _storageProvider.ProviderName,
                 nomeArquivo,
                 imagemBytes.Length / 1024,
-                image.Width,
-                image.Height
+                bitmap.Width,
+                bitmap.Height
             );
 
             return ServiceResult<ImagemProcessadaResult>.Ok(resultado);
@@ -305,27 +307,31 @@ public class ImageService : IImageService
 
     // ── Métodos Auxiliares ──
 
-    private async Task<(byte[] Bytes, int Largura, int Altura)?> GerarThumbnailBytesAsync(
-        Image imagem,
+    private (byte[] Bytes, int Largura, int Altura)? GerarThumbnailBytes(
+        SKBitmap bitmap,
         string tipoMime)
     {
         try
         {
             // Calcular dimensões mantendo aspect ratio
             var (novaLargura, novaAltura) = CalcularDimensoesThumbnail(
-                imagem.Width,
-                imagem.Height,
+                bitmap.Width,
+                bitmap.Height,
                 ThumbnailLarguraMaxima,
                 ThumbnailAlturaMaxima
             );
 
-            // Criar thumbnail
-            using var thumbnail = imagem.Clone(ctx => ctx.Resize(novaLargura, novaAltura));
+            // Criar thumbnail redimensionado
+            using var resizedBitmap = bitmap.Resize(new SKImageInfo(novaLargura, novaAltura), SKFilterQuality.High);
+            if (resizedBitmap == null)
+            {
+                return null;
+            }
 
             // Converter para bytes
-            using var ms = new MemoryStream();
-            await thumbnail.SaveAsync(ms, GetEncoder(tipoMime));
-            var thumbnailBytes = ms.ToArray();
+            using var image = SKImage.FromBitmap(resizedBitmap);
+            using var data = image.Encode(GetSkiaFormat(tipoMime), 85);
+            var thumbnailBytes = data.ToArray();
 
             return (thumbnailBytes, novaLargura, novaAltura);
         }
@@ -358,15 +364,15 @@ public class ImageService : IImageService
         return (novaLargura, novaAltura);
     }
 
-    private static IImageEncoder GetEncoder(string tipoMime)
+    private static SKEncodedImageFormat GetSkiaFormat(string tipoMime)
     {
         return tipoMime.ToLowerInvariant() switch
         {
-            "image/png" => new SixLabors.ImageSharp.Formats.Png.PngEncoder(),
-            "image/jpeg" or "image/jpg" => new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder { Quality = 85 },
-            "image/gif" => new SixLabors.ImageSharp.Formats.Gif.GifEncoder(),
-            "image/webp" => new SixLabors.ImageSharp.Formats.Webp.WebpEncoder(),
-            _ => new SixLabors.ImageSharp.Formats.Png.PngEncoder()
+            "image/png" => SKEncodedImageFormat.Png,
+            "image/jpeg" or "image/jpg" => SKEncodedImageFormat.Jpeg,
+            "image/gif" => SKEncodedImageFormat.Gif,
+            "image/webp" => SKEncodedImageFormat.Webp,
+            _ => SKEncodedImageFormat.Png
         };
     }
 

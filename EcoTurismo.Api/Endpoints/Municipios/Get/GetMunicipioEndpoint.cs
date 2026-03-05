@@ -1,3 +1,4 @@
+using EcoTurismo.Api.Helpers;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
@@ -18,7 +19,8 @@ public class GetMunicipioEndpoint : EndpointWithoutRequest<MunicipioDto>
 
     public override void Configure()
     {
-        Get("/api/municipios/{Id}");     
+        Get("/api/municipios/{Id}");
+        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CancellationToken ct)
@@ -26,9 +28,10 @@ public class GetMunicipioEndpoint : EndpointWithoutRequest<MunicipioDto>
         var id = Route<Guid>("id");
 
         var municipio = await _db.Municipios
-            .Where(m => m.Id == id)
-            .Select(m => new MunicipioDto(m.Id, m.Nome, m.Uf, m.Logo))
-            .FirstOrDefaultAsync(ct);
+            .Include(m => m.Logo)
+            .Include(m => m.LogoTelaLogin)
+            .Include(m => m.LogoAreaPublica)
+            .FirstOrDefaultAsync(m => m.Id == id, ct);
 
         if (municipio is null)
         {
@@ -36,6 +39,6 @@ public class GetMunicipioEndpoint : EndpointWithoutRequest<MunicipioDto>
             return;
         }
 
-        await Send.OkAsync(municipio, ct);
+        await Send.OkAsync(municipio.ToDto(), ct);
     }
 }

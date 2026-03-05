@@ -1,4 +1,5 @@
 using EcoTurismo.Api.Authorization;
+using EcoTurismo.Api.Helpers;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Domain.Entities;
 using EcoTurismo.Infra.Data;
@@ -7,6 +8,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EcoTurismo.Api.Endpoints.Banners;
 
+/// <summary>
+/// ENDPOINT LEGADO - Criar banner sem upload de imagem
+/// Use UploadBannerEndpoint para criar banners com imagem
+/// Este endpoint está mantido apenas para compatibilidade
+/// </summary>
 public class CreateBannerEndpoint : Endpoint<CreateBannerRequest, BannerDto>
 {
     private readonly EcoTurismoDbContext _db;
@@ -17,6 +23,9 @@ public class CreateBannerEndpoint : Endpoint<CreateBannerRequest, BannerDto>
     {
         Post("/api/banners");
         Policies(RolePolicies.AdminOrPrefeituraPolicy);
+        Description(d => d
+            .WithTags("Banners")
+            .WithSummary("[LEGADO] Criar banner sem imagem - Use POST /api/uploads/banners"));
     }
 
     public override async Task HandleAsync(CreateBannerRequest req, CancellationToken ct)
@@ -47,7 +56,7 @@ public class CreateBannerEndpoint : Endpoint<CreateBannerRequest, BannerDto>
             MunicipioId = req.MunicipioId,
             Titulo = req.Titulo,
             Subtitulo = req.Subtitulo,
-            ImagemUrl = req.ImagemUrl,
+            ImagemId = null, // Sem imagem
             Link = req.Link,
             Ordem = req.Ordem ?? maxOrdem + 1,
             Ativo = req.Ativo ?? true,
@@ -58,9 +67,14 @@ public class CreateBannerEndpoint : Endpoint<CreateBannerRequest, BannerDto>
         _db.Banners.Add(banner);
         await _db.SaveChangesAsync(ct);
 
+        // Recarregar com includes
+        banner = (await _db.Banners
+            .Include(b => b.Imagem)
+            .FirstOrDefaultAsync(b => b.Id == banner.Id, ct))!;
+
         await Send.CreatedAtAsync<GetBannerEndpoint>(
             new { id = banner.Id },
-            new BannerDto(banner.Id, banner.MunicipioId, banner.Titulo, banner.Subtitulo, banner.ImagemUrl, banner.Link, banner.Ordem, banner.Ativo),
+            banner.ToDto(),
             cancellation: ct
         );
     }

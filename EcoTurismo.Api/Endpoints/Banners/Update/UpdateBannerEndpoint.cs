@@ -1,7 +1,9 @@
 using EcoTurismo.Api.Authorization;
+using EcoTurismo.Api.Helpers;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
+using Microsoft.EntityFrameworkCore;
 
 namespace EcoTurismo.Api.Endpoints.Banners;
 
@@ -19,23 +21,25 @@ public class UpdateBannerEndpoint : Endpoint<UpdateBannerRequest, BannerDto>
 
     public override async Task HandleAsync(UpdateBannerRequest req, CancellationToken ct)
     {
-        var b = await _db.Banners.FindAsync([req.Id], ct);
+        var banner = await _db.Banners
+            .Include(b => b.Imagem)
+            .FirstOrDefaultAsync(b => b.Id == req.Id, ct);
 
-        if (b is null)
+        if (banner is null)
         {
             await Send.NotFoundAsync(ct);
             return;
         }
 
-        if (req.Titulo is not null) b.Titulo = req.Titulo;
-        if (req.Subtitulo is not null) b.Subtitulo = req.Subtitulo;
-        if (req.ImagemUrl is not null) b.ImagemUrl = req.ImagemUrl;
-        if (req.Link is not null) b.Link = req.Link;
-        if (req.Ordem.HasValue) b.Ordem = req.Ordem.Value;
-        if (req.Ativo.HasValue) b.Ativo = req.Ativo.Value;
+        if (req.Titulo is not null) banner.Titulo = req.Titulo;
+        if (req.Subtitulo is not null) banner.Subtitulo = req.Subtitulo;
+        if (req.Link is not null) banner.Link = req.Link;
+        if (req.Ordem.HasValue) banner.Ordem = req.Ordem.Value;
+        if (req.Ativo.HasValue) banner.Ativo = req.Ativo.Value;
 
+        banner.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync(ct);
 
-        await Send.OkAsync(new BannerDto(b.Id, b.MunicipioId, b.Titulo, b.Subtitulo, b.ImagemUrl, b.Link, b.Ordem, b.Ativo), ct);
+        await Send.OkAsync(banner.ToDto(), ct);
     }
 }

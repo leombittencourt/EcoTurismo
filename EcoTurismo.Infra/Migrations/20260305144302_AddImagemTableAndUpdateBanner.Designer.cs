@@ -3,6 +3,7 @@ using System;
 using EcoTurismo.Infra.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoTurismo.Infra.Migrations
 {
     [DbContext(typeof(EcoTurismoDbContext))]
-    partial class EcoTurismoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260305144302_AddImagemTableAndUpdateBanner")]
+    partial class AddImagemTableAndUpdateBanner
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -295,20 +298,20 @@ namespace EcoTurismo.Infra.Migrations
                         .HasColumnName("CreatedAt")
                         .HasComment("Data de criação do registro");
 
-                    b.Property<Guid?>("LogoAreaPublicaId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("LogoAreaPublicaId")
-                        .HasComment("FK para imagem do logo da área pública");
+                    b.Property<string>("Logo")
+                        .HasColumnType("text")
+                        .HasColumnName("Logo")
+                        .HasComment("URL do logotipo do município");
 
-                    b.Property<Guid?>("LogoId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("LogoId")
-                        .HasComment("FK para imagem do logo geral do município");
+                    b.Property<string>("LogoAreaPublica")
+                        .HasColumnType("text")
+                        .HasColumnName("LogoAreaPublica")
+                        .HasComment("Logo em base64 para exibição na área pública/portal");
 
-                    b.Property<Guid?>("LogoTelaLoginId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("LogoTelaLoginId")
-                        .HasComment("FK para imagem do logo da tela de login");
+                    b.Property<string>("LogoTelaLogin")
+                        .HasColumnType("text")
+                        .HasColumnName("LogoTelaLogin")
+                        .HasComment("Logo em base64 para exibição na tela de login");
 
                     b.Property<string>("Nome")
                         .IsRequired()
@@ -325,15 +328,6 @@ namespace EcoTurismo.Infra.Migrations
                         .HasComment("Unidade federativa (sigla do estado)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("LogoAreaPublicaId")
-                        .HasDatabaseName("IX_Municipios_LogoAreaPublicaId");
-
-                    b.HasIndex("LogoId")
-                        .HasDatabaseName("IX_Municipios_LogoId");
-
-                    b.HasIndex("LogoTelaLoginId")
-                        .HasDatabaseName("IX_Municipios_LogoTelaLoginId");
 
                     b.ToTable("Municipios", (string)null);
                 });
@@ -809,30 +803,6 @@ namespace EcoTurismo.Infra.Migrations
                     b.Navigation("Imagem");
 
                     b.Navigation("Municipio");
-                });
-
-            modelBuilder.Entity("EcoTurismo.Domain.Entities.Municipio", b =>
-                {
-                    b.HasOne("EcoTurismo.Domain.Entities.Imagem", "LogoAreaPublica")
-                        .WithMany()
-                        .HasForeignKey("LogoAreaPublicaId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("EcoTurismo.Domain.Entities.Imagem", "Logo")
-                        .WithMany()
-                        .HasForeignKey("LogoId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("EcoTurismo.Domain.Entities.Imagem", "LogoTelaLogin")
-                        .WithMany()
-                        .HasForeignKey("LogoTelaLoginId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Logo");
-
-                    b.Navigation("LogoAreaPublica");
-
-                    b.Navigation("LogoTelaLogin");
                 });
 
             modelBuilder.Entity("EcoTurismo.Domain.Entities.Quiosque", b =>

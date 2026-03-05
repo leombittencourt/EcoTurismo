@@ -1,3 +1,4 @@
+using EcoTurismo.Api.Helpers;
 using EcoTurismo.Application.DTOs;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
@@ -19,15 +20,18 @@ public class ListBannersEndpoint : Endpoint<ListBannersRequest, List<BannerDto>>
 
     public override async Task HandleAsync(ListBannersRequest req, CancellationToken ct)
     {
-        var query = _db.Banners.AsQueryable();
+        var query = _db.Banners
+            .Include(b => b.Imagem)
+            .AsQueryable();
 
         if (req.ApenasAtivos == true)
             query = query.Where(b => b.Ativo);
 
-        var data = await query
+        var banners = await query
             .OrderBy(b => b.Ordem)
-            .Select(b => new BannerDto(b.Id, b.MunicipioId, b.Titulo, b.Subtitulo, b.ImagemUrl, b.Link, b.Ordem, b.Ativo))
             .ToListAsync(ct);
+
+        var data = banners.Select(b => b.ToDto()).ToList();
 
         await Send.OkAsync(data, ct);
     }

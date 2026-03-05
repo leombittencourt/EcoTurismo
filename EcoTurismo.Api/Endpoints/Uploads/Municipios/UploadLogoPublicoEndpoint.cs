@@ -1,4 +1,6 @@
 using EcoTurismo.Api.Authorization;
+using EcoTurismo.Application.DTOs;
+using EcoTurismo.Application.Interfaces;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -8,10 +10,12 @@ namespace EcoTurismo.Api.Endpoints.Uploads.Municipios;
 public class UploadLogoPublicoEndpoint : Endpoint<UploadLogoPublicoRequest>
 {
     private readonly EcoTurismoDbContext _db;
+    private readonly IImageService _imageService;
 
-    public UploadLogoPublicoEndpoint(EcoTurismoDbContext db)
+    public UploadLogoPublicoEndpoint(EcoTurismoDbContext db, IImageService imageService)
     {
         _db = db;
+        _imageService = imageService;
     }
 
     public override void Configure()
@@ -22,7 +26,6 @@ public class UploadLogoPublicoEndpoint : Endpoint<UploadLogoPublicoRequest>
         Description(d => d
             .WithTags("Uploads", "Municípios")
             .WithSummary("Upload do logo da área pública do município")
-            .WithDescription("Converte o arquivo para base64 e salva no campo LogoAreaPublica")
             .Produces(200)
             .Produces(400)
             .Produces(404));
@@ -39,33 +42,53 @@ public class UploadLogoPublicoEndpoint : Endpoint<UploadLogoPublicoRequest>
             return;
         }
 
-        string logoBase64;
+        // Fazer upload da imagem usando IImageService
         try
         {
             using var memoryStream = new MemoryStream();
             await req.Logo.CopyToAsync(memoryStream, ct);
             var bytes = memoryStream.ToArray();
-            var base64String = Convert.ToBase64String(bytes);
-            var contentType = req.Logo.ContentType;
-            logoBase64 = $"data:{contentType};base64,{base64String}";
+
+            var uploadRequest = new ImagemUploadRequest(
+                EntidadeTipo: "Municipio",
+                EntidadeId: municipio.Id,
+                Categoria: "logo_publico",
+                ImagemBytes: bytes,
+                NomeArquivo: req.Logo.FileName,
+                TipoMime: req.Logo.ContentType,
+                Ordem: 0
+            );
+
+            var result = await _imageService.SalvarImagemAsync(uploadRequest);
+
+            if (!result.Success)
+            {
+                ThrowError($"Erro ao processar a imagem: {result.ErrorMessage}");
+                return;
+            }
+
+            // Remover imagem antiga se existir
+            if (municipio.LogoAreaPublicaId.HasValue)
+            {
+                await _imageService.RemoverImagemAsync(municipio.LogoAreaPublicaId.Value);
+            }
+
+            // Atualizar município com a nova imagem
+            municipio.LogoAreaPublicaId = result.Data!.Id;
+            await _db.SaveChangesAsync(ct);
+
+            await Send.OkAsync(new
+            {
+                success = true,
+                message = "Logo da área pública atualizado com sucesso",
+                municipioId = municipio.Id,
+                municipioNome = municipio.Nome,
+                imagem = result.Data
+            }, ct);
         }
         catch (Exception ex)
         {
             ThrowError($"Erro ao processar a imagem: {ex.Message}");
-            return;
         }
-
-        municipio.LogoAreaPublica = logoBase64;
-        municipio.CreatedAt = DateTimeOffset.UtcNow;
-        await _db.SaveChangesAsync(ct);
-
-        await Send.OkAsync(new
-        {
-            success = true,
-            message = "Logo da área pública atualizado com sucesso",
-            municipioId = municipio.Id,
-            municipioNome = municipio.Nome,
-            logoAreaPublica = logoBase64
-        }, ct);
     }
 }

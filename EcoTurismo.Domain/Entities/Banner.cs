@@ -6,9 +6,9 @@ public class Banner
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid? MunicipioId { get; set; }
+    public Guid? ImagemId { get; set; }
     public string? Titulo { get; set; }
     public string? Subtitulo { get; set; }
-    public string ImagemUrl { get; set; } = string.Empty;
     public string? Link { get; set; }
     public int Ordem { get; set; }
     public bool Ativo { get; set; } = true;
@@ -18,4 +18,7 @@ public class Banner
     // Navigation
     [JsonIgnore]
     public Municipio? Municipio { get; set; }
+
+    [JsonIgnore]
+    public Imagem? Imagem { get; set; }
 }

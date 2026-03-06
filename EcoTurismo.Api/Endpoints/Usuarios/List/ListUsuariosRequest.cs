@@ -1,19 +1,19 @@
 using EcoTurismo.Application.DTOs;
 using FastEndpoints;
 
-namespace EcoTurismo.Api.Endpoints.Atrativos;
+namespace EcoTurismo.Api.Endpoints.Usuarios.List;
 
-public class ListAtrativosRequest : PagedRequest
+public class ListUsuariosRequest : PagedRequest
 {
     [QueryParam]
     public Guid? MunicipioId { get; set; }
-
+    
     [QueryParam]
-    public string? Status { get; set; }
-
+    public Guid? RoleId { get; set; }
+    
     [QueryParam]
-    public string? Tipo { get; set; }
-
+    public bool? Ativo { get; set; }
+    
     [QueryParam]
     public string? Search { get; set; }
 }

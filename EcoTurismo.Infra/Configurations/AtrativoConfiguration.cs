@@ -49,12 +49,12 @@ public class AtrativoConfiguration : IEntityTypeConfiguration<Atrativo>
         builder.Property(a => a.Latitude)
             .HasColumnName("Latitude")
             .HasComment("Latitude do atrativo")
-            .HasPrecision(10, 7);
+            .HasPrecision(12, 9);
 
         builder.Property(a => a.Longitude)
             .HasColumnName("Longitude")
             .HasComment("Longitude do atrativo")
-            .HasPrecision(10, 7);
+            .HasPrecision(12, 9);
 
         builder.Property(a => a.MapUrl)
             .HasColumnName("MapUrl")

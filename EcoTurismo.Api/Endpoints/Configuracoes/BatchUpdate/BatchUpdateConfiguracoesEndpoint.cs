@@ -1,4 +1,5 @@
 using EcoTurismo.Api.Authorization;
+using EcoTurismo.Domain.Entities;
 using EcoTurismo.Infra.Data;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,24 @@ public class BatchUpdateConfiguracoesEndpoint : Endpoint<BatchUpdateConfiguracoe
                 .FirstOrDefaultAsync(c => c.Chave == item.Chave, ct);
 
             if (config is not null)
+            {
+                // Atualizar configuração existente
                 config.Valor = item.Valor;
+                config.UpdatedAt = DateTimeOffset.UtcNow;
+            }
+            else
+            {
+                // Criar nova configuração
+                var novaConfig = new ConfiguracaoSistema
+                {
+                    Id = Guid.NewGuid(),
+                    Chave = item.Chave,
+                    Valor = item.Valor,
+                    Descricao = null,
+                    UpdatedAt = DateTimeOffset.UtcNow
+                };
+                await _db.Configuracoes.AddAsync(novaConfig, ct);
+            }
         }
 
         await _db.SaveChangesAsync(ct);

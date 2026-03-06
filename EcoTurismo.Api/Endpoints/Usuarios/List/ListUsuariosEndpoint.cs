@@ -14,9 +14,7 @@ public class ListUsuariosEndpoint : EndpointWithoutRequest<List<UsuarioListItem>
     public override void Configure()
     {
         Get("/api/usuarios");
-
-        // Usar política baseada em role (Admin ou Prefeitura podem listar usuários)
-        Policies(RolePolicies.AdminOrPrefeituraPolicy);
+        Policies(RolePolicies.AdminPolicy);
     }
 
     public override async Task HandleAsync(CancellationToken ct)

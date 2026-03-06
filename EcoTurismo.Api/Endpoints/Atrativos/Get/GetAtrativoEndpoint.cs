@@ -14,7 +14,8 @@ public class GetAtrativoEndpoint : EndpointWithoutRequest<AtrativoDto>
 
     public override void Configure()
     {
-        Get("/api/atrativos/{Id}");        
+        Get("/api/atrativos/{Id}");
+        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

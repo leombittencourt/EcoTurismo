@@ -108,93 +108,96 @@ public class ReservaService : IReservaService
             return ServiceResult<ReservaDto>.Ok(MapToDto(reserva));
         });
     }
-
     public async Task<bool> AtualizarStatusAsync(Guid id, ReservaStatus status)
     {
-        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        var strategy = _db.Database.CreateExecutionStrategy();
 
-        var reserva = await _db.Reservas.FirstOrDefaultAsync(r => r.Id == id);
-        if (reserva is null) return false;
-
-        var statusAnterior = reserva.Status;
-
-        Quiosque? quiosque = null;
-        if (reserva.QuiosqueId.HasValue)
+        return await strategy.ExecuteAsync(async () =>
         {
-            // Lock no quiosque para evitar concorrÃªncia entre liberaÃ§Ãµes/ocupaÃ§Ãµes
-            quiosque = await _db.Quiosques
-                .FromSqlInterpolated($@"
-                    SELECT *
-                    FROM ""Quiosques""
-                    WHERE ""Id"" = {reserva.QuiosqueId.Value}
-                    FOR UPDATE")
-                .SingleOrDefaultAsync();
-        }
+            await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
 
-        reserva.Status = status;
-        await _db.SaveChangesAsync();
+            var reserva = await _db.Reservas.FirstOrDefaultAsync(r => r.Id == id);
+            if (reserva is null) return false;
 
-        // Gerenciar ocupaÃ§Ã£o do atrativo
-        var statusesAtivos = new[] 
-        { 
-            ReservaStatus.Confirmada, 
-            ReservaStatus.Validada, 
-            ReservaStatus.EmAndamento 
-        };
+            var statusAnterior = reserva.Status;
 
-        var estavivoAntes = statusesAtivos.Contains(statusAnterior);
-        var estaAtivoAgora = statusesAtivos.Contains(status);
-
-        // Se saiu de ativo para inativo, decrementar
-        if (estavivoAntes && !estaAtivoAgora)
-        {
-            await _ocupacaoService.DecrementarOcupacaoAsync(
-                reserva.AtrativoId,
-                reserva.Data,
-                reserva.QuantidadePessoas);
-        }
-        // Se entrou de inativo para ativo, incrementar
-        else if (!estavivoAntes && estaAtivoAgora)
-        {
-            await _ocupacaoService.IncrementarOcupacaoAsync(
-                reserva.AtrativoId,
-                reserva.Data,
-                reserva.QuantidadePessoas);
-        }
-
-        if (quiosque is not null)
-        {
-            // Se mudou para cancelada ou concluÃ­da, liberar se nÃ£o existir outra ativa na mesma data
-            if (status == ReservaStatus.Cancelada || status == ReservaStatus.Concluida)
+            Quiosque? quiosque = null;
+            if (reserva.QuiosqueId.HasValue)
             {
-                var inicioAtual = reserva.Data;
-                var fimAtual = reserva.DataFim ?? reserva.Data;
-
-                var outrasReservasAtivas = await _db.Reservas
-                    .AnyAsync(r => r.QuiosqueId == reserva.QuiosqueId!.Value &&
-                                   r.Id != reserva.Id &&
-                                   r.Data <= fimAtual &&
-                                   (r.DataFim ?? r.Data) >= inicioAtual &&
-                                   (r.Status == ReservaStatus.Confirmada ||
-                                    r.Status == ReservaStatus.EmAndamento ||
-                                    r.Status == ReservaStatus.Validada));
-
-                if (!outrasReservasAtivas)
-                    quiosque.Status = (int)QuiosqueStatus.Disponivel;
-            }
-            // Se saiu de inativo => ativo, ocupar
-            else if (!statusAnterior.EstaAtiva() && status.EstaAtiva())
-            {
-                quiosque.Status = (int)QuiosqueStatus.Ocupado;
+                // Lock no quiosque para evitar concorrencia entre liberacoes/ocupacoes
+                quiosque = await _db.Quiosques
+                    .FromSqlInterpolated($@"
+                        SELECT *
+                        FROM ""Quiosques""
+                        WHERE ""Id"" = {reserva.QuiosqueId.Value}
+                        FOR UPDATE")
+                    .SingleOrDefaultAsync();
             }
 
+            reserva.Status = status;
             await _db.SaveChangesAsync();
-        }
 
-        await tx.CommitAsync();
-        return true;
+            // Gerenciar ocupacao do atrativo
+            var statusesAtivos = new[]
+            {
+                ReservaStatus.Confirmada,
+                ReservaStatus.Validada,
+                ReservaStatus.EmAndamento
+            };
+
+            var estavivoAntes = statusesAtivos.Contains(statusAnterior);
+            var estaAtivoAgora = statusesAtivos.Contains(status);
+
+            // Se saiu de ativo para inativo, decrementar
+            if (estavivoAntes && !estaAtivoAgora)
+            {
+                await _ocupacaoService.DecrementarOcupacaoAsync(
+                    reserva.AtrativoId,
+                    reserva.Data,
+                    reserva.QuantidadePessoas);
+            }
+            // Se entrou de inativo para ativo, incrementar
+            else if (!estavivoAntes && estaAtivoAgora)
+            {
+                await _ocupacaoService.IncrementarOcupacaoAsync(
+                    reserva.AtrativoId,
+                    reserva.Data,
+                    reserva.QuantidadePessoas);
+            }
+
+            if (quiosque is not null)
+            {
+                // Se mudou para cancelada ou concluida, liberar se nao existir outra ativa no mesmo periodo
+                if (status == ReservaStatus.Cancelada || status == ReservaStatus.Concluida)
+                {
+                    var inicioAtual = reserva.Data;
+                    var fimAtual = reserva.DataFim ?? reserva.Data;
+
+                    var outrasReservasAtivas = await _db.Reservas
+                        .AnyAsync(r => r.QuiosqueId == reserva.QuiosqueId!.Value &&
+                                       r.Id != reserva.Id &&
+                                       r.Data <= fimAtual &&
+                                       (r.DataFim ?? r.Data) >= inicioAtual &&
+                                       (r.Status == ReservaStatus.Confirmada ||
+                                        r.Status == ReservaStatus.EmAndamento ||
+                                        r.Status == ReservaStatus.Validada));
+
+                    if (!outrasReservasAtivas)
+                        quiosque.Status = (int)QuiosqueStatus.Disponivel;
+                }
+                // Se saiu de inativo => ativo, ocupar
+                else if (!statusAnterior.EstaAtiva() && status.EstaAtiva())
+                {
+                    quiosque.Status = (int)QuiosqueStatus.Ocupado;
+                }
+
+                await _db.SaveChangesAsync();
+            }
+
+            await tx.CommitAsync();
+            return true;
+        });
     }
-
     public async Task<ValidacaoResponse> ValidarTicketAsync(ValidacaoRequest request, Guid? operadorId)
     {
         var reserva = await _db.Reservas
@@ -244,3 +247,4 @@ public class ReservaService : IReservaService
         r.Status.ToStringValue(), r.Token, r.CreatedAt
     );
 }
+

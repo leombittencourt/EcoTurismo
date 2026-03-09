@@ -1,4 +1,4 @@
-using EcoTurismo.Api.Authorization;
+﻿using EcoTurismo.Api.Authorization;
 using EcoTurismo.Api.BackgroundServices;
 using EcoTurismo.Api.Middleware;
 using EcoTurismo.Application.Auth;
@@ -19,23 +19,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(o =>
 {
-    o.AddPolicy("AllowFront",
-    policy =>
-    {
+    o.AddPolicy("AllowFront", policy =>
         policy
-            .WithOrigins("https://ecoturismo.lmb.software")
+            .WithOrigins(
+                "https://ecoturismo.lmb.software",
+                "http://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials();
-    });
-    o.AddPolicy("FrontLocal", p =>
-        p.WithOrigins("http://localhost:5173")
-         .AllowAnyHeader()
-         .AllowAnyMethod()
-         .AllowCredentials() // só se você usar cookies; se for Bearer token, pode remover
-    );
+            .AllowCredentials());
 });
-
 var connString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<EcoTurismoDbContext>(o =>
 {
@@ -68,24 +60,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// ── Authorization ──
+// â”€â”€ Authorization â”€â”€
 builder.Services.AddAuthorization(options =>
 {
-    // Adicionar políticas baseadas em roles (mais simples)
+    // Adicionar polÃ­ticas baseadas em roles (mais simples)
     options.AddRolePolicies();
 
-    // Manter políticas baseadas em permissions (se necessário)
+    // Manter polÃ­ticas baseadas em permissions (se necessÃ¡rio)
     options.AddPolicies();
 });
 
-// Handlers de autorização
+// Handlers de autorizaÃ§Ã£o
 builder.Services.AddScoped<IAuthorizationHandler, RoleAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
-// ── Memory Cache ──
+// â”€â”€ Memory Cache â”€â”€
 builder.Services.AddMemoryCache();
 
-// ── Services (DI) ──
+// â”€â”€ Services (DI) â”€â”€
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IReservaService, ReservaService>();
 builder.Services.AddScoped<IQuiosqueService, QuiosqueService>();
@@ -94,16 +86,16 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IOcupacaoService, OcupacaoService>();
 
-// ── Rate Limiting ──
+// â”€â”€ Rate Limiting â”€â”€
 builder.Services.AddSingleton(sp => new EcoTurismo.Api.Services.RateLimitingService(
     window: TimeSpan.FromMinutes(1),
     maxRequests: 10
 ));
 
-// ── Geocoding Service ──
+// â”€â”€ Geocoding Service â”€â”€
 builder.Services.AddHttpClient<IGeocodingService, GoogleMapsGeocodingService>();
 
-// ── Image Storage ──
+// â”€â”€ Image Storage â”€â”€
 builder.Services.AddSingleton<EcoTurismo.Application.Services.StorageProviderFactory>();
 builder.Services.AddScoped<EcoTurismo.Application.Interfaces.IStorageProvider>(sp =>
 {
@@ -112,13 +104,13 @@ builder.Services.AddScoped<EcoTurismo.Application.Interfaces.IStorageProvider>(s
 });
 builder.Services.AddScoped<IImageService, EcoTurismo.Application.Services.ImageService>();
 
-// ── Background Jobs ──
+// â”€â”€ Background Jobs â”€â”€
 builder.Services.AddHostedService<ReconciliacaoOcupacaoJob>();
 
-// ── FastEndpoints ──
+// â”€â”€ FastEndpoints â”€â”€
 builder.Services.AddFastEndpoints();
 
-// Configurar JsonSerializerOptions para FastEndpoints e APIs mínimas
+// Configurar JsonSerializerOptions para FastEndpoints e APIs mÃ­nimas
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
@@ -140,7 +132,7 @@ builder.Services.SwaggerDocument(o =>
 
 var app = builder.Build();
 
-// ── Inicialização do Banco de Dados ──
+// â”€â”€ InicializaÃ§Ã£o do Banco de Dados â”€â”€
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -148,18 +140,18 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        logger.LogInformation("Iniciando configuração do banco de dados...");
+        logger.LogInformation("Iniciando configuraÃ§Ã£o do banco de dados...");
 
         var db = services.GetRequiredService<EcoTurismoDbContext>();
 
-        // Verificar conexão
-        logger.LogInformation("Testando conexão com o banco de dados...");
+        // Verificar conexÃ£o
+        logger.LogInformation("Testando conexÃ£o com o banco de dados...");
         var canConnect = await db.Database.CanConnectAsync();
-        logger.LogInformation("Conexão com banco: {Status}", canConnect ? "✅ OK" : "❌ FALHOU");
+        logger.LogInformation("ConexÃ£o com banco: {Status}", canConnect ? "âœ… OK" : "âŒ FALHOU");
 
         if (!canConnect)
         {
-            logger.LogError("Não foi possível conectar ao banco de dados. Verifique a connection string.");
+            logger.LogError("NÃ£o foi possÃ­vel conectar ao banco de dados. Verifique a connection string.");
             throw new InvalidOperationException("Falha ao conectar no banco de dados");
         }
 
@@ -172,7 +164,7 @@ using (var scope = app.Services.CreateScope())
 
         if (pendingMigrations.Any())
         {
-            logger.LogInformation("📋 Migrations pendentes:");
+            logger.LogInformation("ðŸ“‹ Migrations pendentes:");
             foreach (var migration in pendingMigrations)
             {
                 logger.LogInformation("  - {Migration}", migration);
@@ -188,11 +180,11 @@ using (var scope = app.Services.CreateScope())
         var remainingPending = await db.Database.GetPendingMigrationsAsync();
         if (remainingPending.Any())
         {
-            logger.LogWarning("⚠️ Ainda há {Count} migrations pendentes após MigrateAsync", remainingPending.Count());
+            logger.LogWarning("âš ï¸ Ainda hÃ¡ {Count} migrations pendentes apÃ³s MigrateAsync", remainingPending.Count());
         }
         else
         {
-            logger.LogInformation("✅ Todas as migrations foram aplicadas!");
+            logger.LogInformation("âœ… Todas as migrations foram aplicadas!");
         }
 
         // Executar seed de dados iniciais
@@ -200,37 +192,36 @@ using (var scope = app.Services.CreateScope())
         await EcoTurismo.Infra.Data.Seeds.AuthorizationSeed.SeedAsync(db);
         logger.LogInformation("Seed executado com sucesso!");
 
-        logger.LogInformation("✅ Banco de dados configurado e pronto para uso!");
+        logger.LogInformation("âœ… Banco de dados configurado e pronto para uso!");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "❌ Erro ao configurar o banco de dados. Detalhes: {Message}", ex.Message);
+        logger.LogError(ex, "âŒ Erro ao configurar o banco de dados. Detalhes: {Message}", ex.Message);
         logger.LogError("Stack Trace: {StackTrace}", ex.StackTrace);
         if (ex.InnerException != null)
         {
             logger.LogError("Inner Exception: {InnerMessage}", ex.InnerException.Message);
         }
-        throw; // Re-throw para impedir a inicialização com erro
+        throw; // Re-throw para impedir a inicializaÃ§Ã£o com erro
     }
 }
 
 app.UseCors("AllowFront");
-app.UseCors("FrontLocal");
 
-// ── Rate Limiting (primeira camada de proteção) ──
+// â”€â”€ Rate Limiting (primeira camada de proteÃ§Ã£o) â”€â”€
 app.UseRateLimiting();
 
-// ── Exception Handling Middleware ──
+// â”€â”€ Exception Handling Middleware â”€â”€
 app.UseExceptionHandling();
 
-// ── API Key Validation (para endpoints públicos protegidos) ──
+// â”€â”€ API Key Validation (para endpoints pÃºblicos protegidos) â”€â”€
 app.UseApiKeyValidation();
 
-// ── Middleware ──
+// â”€â”€ Middleware â”€â”€
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Configurar FastEndpoints com serialização segura
+// Configurar FastEndpoints com serializaÃ§Ã£o segura
 app.UseFastEndpoints(config =>
 {
     config.Serializer.Options.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;

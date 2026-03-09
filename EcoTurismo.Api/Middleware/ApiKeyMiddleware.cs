@@ -1,8 +1,8 @@
-namespace EcoTurismo.Api.Middleware;
+﻿namespace EcoTurismo.Api.Middleware;
 
 /// <summary>
-/// Middleware para validar API Key em requisições públicas
-/// Serve como primeira camada de proteção contra uso não autorizado
+/// Middleware para validar API Key em requisiÃ§Ãµes pÃºblicas
+/// Serve como primeira camada de proteÃ§Ã£o contra uso nÃ£o autorizado
 /// </summary>
 public class ApiKeyMiddleware
 {
@@ -23,7 +23,14 @@ public class ApiKeyMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Lista de endpoints que requerem API Key (públicos mas protegidos)
+        // Preflight de CORS nunca deve ser bloqueado por API Key.
+        if (HttpMethods.IsOptions(context.Request.Method))
+        {
+            await _next(context);
+            return;
+        }
+
+        // Lista de endpoints que requerem API Key (pÃºblicos mas protegidos)
         var protectedPublicPaths = new[]
         {
             "/api/quiosques",
@@ -34,14 +41,14 @@ public class ApiKeyMiddleware
 
         var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
         
-        // Se não é um path protegido, continua normalmente
+        // Se nÃ£o Ã© um path protegido, continua normalmente
         if (!protectedPublicPaths.Any(p => path.StartsWith(p)))
         {
             await _next(context);
             return;
         }
 
-        // Se já está autenticado (tem token JWT), não precisa API Key
+        // Se jÃ¡ estÃ¡ autenticado (tem token JWT), nÃ£o precisa API Key
         if (context.User.Identity?.IsAuthenticated == true)
         {
             await _next(context);
@@ -59,7 +66,7 @@ public class ApiKeyMiddleware
             await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
             {
                 success = false,
-                errorMessage = "API Key é obrigatória para acessar este recurso.",
+                errorMessage = "API Key Ã© obrigatÃ³ria para acessar este recurso.",
                 data = (object?)null
             }));
             return;
@@ -69,7 +76,7 @@ public class ApiKeyMiddleware
 
         if (!validApiKeys.Any(k => k == extractedApiKey))
         {
-            _logger.LogWarning("API Key inválida: {Path} de {IP}", 
+            _logger.LogWarning("API Key invÃ¡lida: {Path} de {IP}", 
                 path, context.Connection.RemoteIpAddress);
             
             context.Response.StatusCode = 401;
@@ -77,13 +84,13 @@ public class ApiKeyMiddleware
             await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
             {
                 success = false,
-                errorMessage = "API Key inválida.",
+                errorMessage = "API Key invÃ¡lida.",
                 data = (object?)null
             }));
             return;
         }
 
-        // API Key válida, continuar
+        // API Key vÃ¡lida, continuar
         await _next(context);
     }
 }

@@ -16,4 +16,5 @@ public class Quiosque
 
     // Navigation
     public Atrativo? Atrativo { get; set; }
+    public ICollection<AuditoriaAcaoQuiosque> AuditoriasAcoes { get; set; } = [];
 }

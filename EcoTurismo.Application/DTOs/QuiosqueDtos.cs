@@ -26,7 +26,7 @@ public record QuiosqueUpdateRequest
 {
     public int? Numero { get; init; }
     public bool? TemChurrasqueira { get; init; }
-    public int Status { get; init; } = (int)QuiosqueStatus.Disponivel;
+    public int? Status { get; init; }
     public int? PosicaoX { get; init; }
     public int? PosicaoY { get; init; }
 }

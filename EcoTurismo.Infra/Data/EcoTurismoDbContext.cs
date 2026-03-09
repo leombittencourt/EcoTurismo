@@ -20,6 +20,8 @@ public class EcoTurismoDbContext : DbContext
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<Imagem> Imagens => Set<Imagem>();
+    public DbSet<AuditoriaAcaoQuiosque> AuditoriasAcoesQuiosques => Set<AuditoriaAcaoQuiosque>();
+    public DbSet<AuditoriaStatusReserva> AuditoriasStatusReservas => Set<AuditoriaStatusReserva>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

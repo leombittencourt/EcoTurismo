@@ -23,4 +23,5 @@ public class Reserva
     // Navigation
     public Atrativo Atrativo { get; set; } = null!;
     public Quiosque? Quiosque { get; set; }
+    public ICollection<AuditoriaStatusReserva> AuditoriasStatus { get; set; } = [];
 }

@@ -10,6 +10,12 @@ namespace EcoTurismo.Application.Services;
 public class QuiosqueService : IQuiosqueService
 {
     private readonly EcoTurismoDbContext _db;
+    private static readonly ReservaStatus[] ReservasAtivas =
+    [
+        ReservaStatus.Confirmada,
+        ReservaStatus.EmAndamento,
+        ReservaStatus.Validada
+    ];
 
     public QuiosqueService(EcoTurismoDbContext db) => _db = db;
 
@@ -54,9 +60,32 @@ public class QuiosqueService : IQuiosqueService
 
         if (request.Numero.HasValue) q.Numero = request.Numero.Value;
         if (request.TemChurrasqueira.HasValue) q.TemChurrasqueira = request.TemChurrasqueira.Value;
-        if (request.Status != 0) q.Status = request.Status;
+        if (request.Status.HasValue)
+        {
+            var statusSolicitado = request.Status.Value;
+
+            // Status "disponivel" e "ocupado" sao derivados de reservas ativas do dia.
+            if (statusSolicitado == (int)QuiosqueStatus.Disponivel || statusSolicitado == (int)QuiosqueStatus.Ocupado)
+            {
+                var hoje = DateOnly.FromDateTime(DateTime.UtcNow);
+                var possuiReservaAtivaHoje = await _db.Reservas.AnyAsync(r =>
+                    r.QuiosqueId == id &&
+                    r.Data <= hoje &&
+                    (r.DataFim ?? r.Data) >= hoje &&
+                    ReservasAtivas.Contains(r.Status));
+
+                q.Status = possuiReservaAtivaHoje
+                    ? (int)QuiosqueStatus.Ocupado
+                    : (int)QuiosqueStatus.Disponivel;
+            }
+            else
+            {
+                q.Status = statusSolicitado;
+            }
+        }
         if (request.PosicaoX.HasValue) q.PosicaoX = request.PosicaoX.Value;
         if (request.PosicaoY.HasValue) q.PosicaoY = request.PosicaoY.Value;
+        q.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _db.SaveChangesAsync();
         return MapToDto(q);

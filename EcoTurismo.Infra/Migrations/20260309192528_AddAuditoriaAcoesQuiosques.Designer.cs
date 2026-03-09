@@ -3,6 +3,7 @@ using System;
 using EcoTurismo.Infra.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoTurismo.Infra.Migrations
 {
     [DbContext(typeof(EcoTurismoDbContext))]
-    partial class EcoTurismoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260309192528_AddAuditoriaAcoesQuiosques")]
+    partial class AddAuditoriaAcoesQuiosques
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -186,83 +189,6 @@ namespace EcoTurismo.Infra.Migrations
                     b.HasIndex("UsuarioId");
 
                     b.ToTable("AuditoriasAcoesQuiosques", (string)null);
-                });
-
-            modelBuilder.Entity("EcoTurismo.Domain.Entities.AuditoriaStatusReserva", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("Id")
-                        .HasComment("Identificador unico da auditoria de status da reserva");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAt")
-                        .HasComment("Data/hora da alteracao");
-
-                    b.Property<string>("Motivo")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("Motivo")
-                        .HasComment("Motivo informado para alteracao de status");
-
-                    b.Property<string>("Payload")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("Payload")
-                        .HasComment("Snapshot da reserva na alteracao");
-
-                    b.Property<Guid>("ReservaId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("ReservaId")
-                        .HasComment("Reserva alterada");
-
-                    b.Property<string>("StatusAnterior")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("StatusAnterior")
-                        .HasComment("Status anterior da reserva");
-
-                    b.Property<string>("StatusNovo")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("StatusNovo")
-                        .HasComment("Novo status da reserva");
-
-                    b.Property<Guid?>("UsuarioId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("UsuarioId")
-                        .HasComment("Usuario autenticado que executou a alteracao");
-
-                    b.Property<string>("UsuarioNome")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("UsuarioNome")
-                        .HasComment("Nome do usuario no momento da alteracao");
-
-                    b.Property<string>("UsuarioRole")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("UsuarioRole")
-                        .HasComment("Role do usuario no momento da alteracao");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt")
-                        .HasDatabaseName("IX_AuditoriasStatusReservas_CreatedAt");
-
-                    b.HasIndex("ReservaId")
-                        .HasDatabaseName("IX_AuditoriasStatusReservas_ReservaId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("AuditoriasStatusReservas", (string)null);
                 });
 
             modelBuilder.Entity("EcoTurismo.Domain.Entities.Banner", b =>
@@ -982,24 +908,6 @@ namespace EcoTurismo.Infra.Migrations
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("EcoTurismo.Domain.Entities.AuditoriaStatusReserva", b =>
-                {
-                    b.HasOne("EcoTurismo.Domain.Entities.Reserva", "Reserva")
-                        .WithMany("AuditoriasStatus")
-                        .HasForeignKey("ReservaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EcoTurismo.Domain.Entities.Usuario", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Reserva");
-
-                    b.Navigation("Usuario");
-                });
-
             modelBuilder.Entity("EcoTurismo.Domain.Entities.Banner", b =>
                 {
                     b.HasOne("EcoTurismo.Domain.Entities.Imagem", "Imagem")
@@ -1161,11 +1069,6 @@ namespace EcoTurismo.Infra.Migrations
             modelBuilder.Entity("EcoTurismo.Domain.Entities.Quiosque", b =>
                 {
                     b.Navigation("AuditoriasAcoes");
-                });
-
-            modelBuilder.Entity("EcoTurismo.Domain.Entities.Reserva", b =>
-                {
-                    b.Navigation("AuditoriasStatus");
                 });
 
             modelBuilder.Entity("EcoTurismo.Domain.Entities.Role", b =>

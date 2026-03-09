@@ -44,23 +44,31 @@ public class ReservaService : IReservaService
 
             if (request.QuiosqueId.HasValue)
             {
-                // ✅ Sem SqlRaw: entidade tracked
-                // Se você quiser lock pessimista, veja a seção "LOCK" abaixo.
+                // âœ… Sem SqlRaw: entidade tracked
+                // Se vocÃª quiser lock pessimista, veja a seÃ§Ã£o "LOCK" abaixo.
                 quiosque = await _db.Quiosques
                     .SingleOrDefaultAsync(q => q.Id == request.QuiosqueId.Value);
 
                 if (quiosque is null)
-                    return ServiceResult<ReservaDto>.Error("Quiosque não encontrado.");
+                    return ServiceResult<ReservaDto>.Error("Quiosque nÃ£o encontrado.");
 
-                var ocupadoNaData = await _db.Reservas.AnyAsync(r =>
+                if (quiosque.Status is (int)QuiosqueStatus.Inativo or (int)QuiosqueStatus.Manutencao or (int)QuiosqueStatus.Bloqueado)
+                    return ServiceResult<ReservaDto>.Error("Quiosque indisponivel para reserva no momento.");
+
+                var inicioSolicitado = request.Data;
+                var fimSolicitado = request.DataFim ?? request.Data;
+
+                var ocupadoNoPeriodo = await _db.Reservas.AnyAsync(r =>
                     r.QuiosqueId == request.QuiosqueId.Value &&
-                    r.Data == request.Data &&
+                    r.Data <= fimSolicitado &&
+                    (r.DataFim ?? r.Data) >= inicioSolicitado &&
                     (r.Status == ReservaStatus.Confirmada ||
                      r.Status == ReservaStatus.EmAndamento ||
                      r.Status == ReservaStatus.Validada));
 
-                if (ocupadoNaData)
-                    return ServiceResult<ReservaDto>.Error($"Quiosque já está ocupado para a data {request.Data:dd/MM/yyyy}");
+                if (ocupadoNoPeriodo)
+                    return ServiceResult<ReservaDto>.Error(
+                        $"Quiosque ja esta ocupado no periodo {inicioSolicitado:dd/MM/yyyy} - {fimSolicitado:dd/MM/yyyy}");
             }
 
             var reserva = new Reserva
@@ -89,7 +97,7 @@ public class ReservaService : IReservaService
 
             await _db.SaveChangesAsync();
 
-            // Incrementar ocupação do atrativo (somente se for para hoje ou futuro)
+            // Incrementar ocupaÃ§Ã£o do atrativo (somente se for para hoje ou futuro)
             await _ocupacaoService.IncrementarOcupacaoAsync(
                 reserva.AtrativoId, 
                 reserva.Data, 
@@ -113,7 +121,7 @@ public class ReservaService : IReservaService
         Quiosque? quiosque = null;
         if (reserva.QuiosqueId.HasValue)
         {
-            // Lock no quiosque para evitar concorrência entre liberações/ocupações
+            // Lock no quiosque para evitar concorrÃªncia entre liberaÃ§Ãµes/ocupaÃ§Ãµes
             quiosque = await _db.Quiosques
                 .FromSqlInterpolated($@"
                     SELECT *
@@ -126,7 +134,7 @@ public class ReservaService : IReservaService
         reserva.Status = status;
         await _db.SaveChangesAsync();
 
-        // Gerenciar ocupação do atrativo
+        // Gerenciar ocupaÃ§Ã£o do atrativo
         var statusesAtivos = new[] 
         { 
             ReservaStatus.Confirmada, 
@@ -156,13 +164,17 @@ public class ReservaService : IReservaService
 
         if (quiosque is not null)
         {
-            // Se mudou para cancelada ou concluída, liberar se não existir outra ativa na mesma data
+            // Se mudou para cancelada ou concluÃ­da, liberar se nÃ£o existir outra ativa na mesma data
             if (status == ReservaStatus.Cancelada || status == ReservaStatus.Concluida)
             {
+                var inicioAtual = reserva.Data;
+                var fimAtual = reserva.DataFim ?? reserva.Data;
+
                 var outrasReservasAtivas = await _db.Reservas
                     .AnyAsync(r => r.QuiosqueId == reserva.QuiosqueId!.Value &&
                                    r.Id != reserva.Id &&
-                                   r.Data == reserva.Data &&
+                                   r.Data <= fimAtual &&
+                                   (r.DataFim ?? r.Data) >= inicioAtual &&
                                    (r.Status == ReservaStatus.Confirmada ||
                                     r.Status == ReservaStatus.EmAndamento ||
                                     r.Status == ReservaStatus.Validada));
@@ -211,12 +223,12 @@ public class ReservaService : IReservaService
         await _db.SaveChangesAsync();
 
         var mensagem = valido
-            ? "Ticket válido. Entrada autorizada."
+            ? "Ticket vÃ¡lido. Entrada autorizada."
             : reserva is null
-                ? "Ticket não encontrado."
+                ? "Ticket nÃ£o encontrado."
                 : reserva.Status != ReservaStatus.Confirmada
-                    ? $"Ticket já foi {reserva.Status.ToDescricao()}."
-                    : "Ticket não é válido para a data de hoje.";
+                    ? $"Ticket jÃ¡ foi {reserva.Status.ToDescricao()}."
+                    : "Ticket nÃ£o Ã© vÃ¡lido para a data de hoje.";
 
         return new ValidacaoResponse(
             valido,

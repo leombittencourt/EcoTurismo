@@ -22,12 +22,11 @@ public class UpdateReservaStatusEndpoint : Endpoint<UpdateReservaStatusRequest>
         // Converter string para enum
         var status = ReservaStatusExtensions.FromString(req.Status);
 
-        var ok = await _service.AtualizarStatusAsync(req.Id, status);
+        var result = await _service.AtualizarStatusAsync(req.Id, status);
 
-        if (!ok)
+        if (!result.Success)
         {
-            await Send.NotFoundAsync(ct);
-            return;
+            ThrowError(result.ErrorMessage ?? "Não foi possível atualizar o status da reserva.");
         }
 
         await Send.NoContentAsync(ct);

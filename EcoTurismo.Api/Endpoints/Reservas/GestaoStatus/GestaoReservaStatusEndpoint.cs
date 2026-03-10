@@ -42,11 +42,10 @@ public class GestaoReservaStatusEndpoint : Endpoint<GestaoReservaStatusRequest, 
         var statusNovo = ReservaStatusExtensions.FromString(req.Status);
         var statusAnterior = reservaAntes.Status;
 
-        var ok = await _reservaService.AtualizarStatusAsync(req.Id, statusNovo);
-        if (!ok)
+        var result = await _reservaService.AtualizarStatusAsync(req.Id, statusNovo);
+        if (!result.Success)
         {
-            await Send.NotFoundAsync(ct);
-            return;
+            ThrowError(result.ErrorMessage ?? "Não foi possível atualizar o status da reserva.");
         }
 
         var reservaDepois = await _db.Reservas

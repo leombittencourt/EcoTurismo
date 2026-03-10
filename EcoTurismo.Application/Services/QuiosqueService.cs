@@ -19,17 +19,58 @@ public class QuiosqueService : IQuiosqueService
 
     public QuiosqueService(EcoTurismoDbContext db) => _db = db;
 
-    public async Task<List<QuiosqueDto>> ListarAsync(Guid? atrativoId)
+    public async Task<List<QuiosqueDto>> ListarAsync(Guid? atrativoId, DateOnly? dataReferencia = null)
     {
         var query = _db.Quiosques.AsQueryable();
 
         if (atrativoId.HasValue)
             query = query.Where(q => q.AtrativoId == atrativoId.Value);
 
-        return await query
+        var quiosques = await query
             .OrderBy(q => q.Numero)
-            .Select(q => MapToDto(q))
             .ToListAsync();
+
+        if (quiosques.Count == 0)
+            return [];
+
+        var referencia = dataReferencia ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var idsOperacionais = quiosques
+            .Where(q => q.Status is (int)QuiosqueStatus.Disponivel or (int)QuiosqueStatus.Ocupado)
+            .Select(q => q.Id)
+            .ToList();
+
+        HashSet<Guid> ocupadosNaData = [];
+
+        if (idsOperacionais.Count > 0)
+        {
+            var ocupados = await _db.Reservas
+                .Where(r =>
+                    r.QuiosqueId.HasValue &&
+                    idsOperacionais.Contains(r.QuiosqueId.Value) &&
+                    r.Data <= referencia &&
+                    (r.DataFim ?? r.Data) >= referencia &&
+                    ReservasAtivas.Contains(r.Status))
+                .Select(r => r.QuiosqueId!.Value)
+                .Distinct()
+                .ToListAsync();
+
+            ocupadosNaData = ocupados.ToHashSet();
+        }
+
+        return quiosques
+            .Select(q =>
+            {
+                var statusEfetivo = q.Status;
+                if (q.Status is (int)QuiosqueStatus.Disponivel or (int)QuiosqueStatus.Ocupado)
+                {
+                    statusEfetivo = ocupadosNaData.Contains(q.Id)
+                        ? (int)QuiosqueStatus.Ocupado
+                        : (int)QuiosqueStatus.Disponivel;
+                }
+
+                return MapToDto(q, statusEfetivo);
+            })
+            .ToList();
     }
 
     public async Task<QuiosqueDto> CriarAsync(QuiosqueCreateRequest request)
@@ -101,9 +142,9 @@ public class QuiosqueService : IQuiosqueService
         return true;
     }
 
-    private static QuiosqueDto MapToDto(Quiosque q) => new(
+    private static QuiosqueDto MapToDto(Quiosque q, int? statusOverride = null) => new(
         q.Id, q.AtrativoId, q.Numero,
-        q.TemChurrasqueira, ((QuiosqueStatus)q.Status).ToString(),
+        q.TemChurrasqueira, ((QuiosqueStatus)(statusOverride ?? q.Status)).ToString(),
         q.PosicaoX, q.PosicaoY
     );
 }

@@ -7,6 +7,6 @@ public interface IReservaService
 {
     Task<List<ReservaDto>> ListarAsync(Guid? atrativoId);
     Task<ServiceResult<ReservaDto>> CriarAsync(ReservaCreateRequest request);
-    Task<bool> AtualizarStatusAsync(Guid id, ReservaStatus status);
+    Task<ServiceResult<bool>> AtualizarStatusAsync(Guid id, ReservaStatus status);
     Task<ValidacaoResponse> ValidarTicketAsync(ValidacaoRequest request, Guid? operadorId);
 }

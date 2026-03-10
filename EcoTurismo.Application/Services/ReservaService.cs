@@ -108,7 +108,7 @@ public class ReservaService : IReservaService
             return ServiceResult<ReservaDto>.Ok(MapToDto(reserva));
         });
     }
-    public async Task<bool> AtualizarStatusAsync(Guid id, ReservaStatus status)
+    public async Task<ServiceResult<bool>> AtualizarStatusAsync(Guid id, ReservaStatus status)
     {
         var strategy = _db.Database.CreateExecutionStrategy();
 
@@ -117,7 +117,8 @@ public class ReservaService : IReservaService
             await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
 
             var reserva = await _db.Reservas.FirstOrDefaultAsync(r => r.Id == id);
-            if (reserva is null) return false;
+            if (reserva is null)
+                return ServiceResult<bool>.Error("Reserva não encontrada.");
 
             var statusAnterior = reserva.Status;
 
@@ -147,6 +148,50 @@ public class ReservaService : IReservaService
 
             var estavivoAntes = statusesAtivos.Contains(statusAnterior);
             var estaAtivoAgora = statusesAtivos.Contains(status);
+
+            // Reativacao precisa respeitar capacidade do atrativo no periodo da reserva.
+            if (!estavivoAntes && estaAtivoAgora)
+            {
+                var atrativo = await _db.Atrativos
+                    .FirstOrDefaultAsync(a => a.Id == reserva.AtrativoId);
+
+                if (atrativo is null)
+                    return ServiceResult<bool>.Error("Atrativo da reserva não encontrado.");
+
+                var inicioReserva = reserva.Data;
+                var fimReserva = reserva.DataFim ?? reserva.Data;
+
+                var reservasAtivasNoPeriodo = await _db.Reservas
+                    .Where(r =>
+                        r.Id != reserva.Id &&
+                        r.AtrativoId == reserva.AtrativoId &&
+                        r.Data <= fimReserva &&
+                        (r.DataFim ?? r.Data) >= inicioReserva &&
+                        (r.Status == ReservaStatus.Confirmada ||
+                         r.Status == ReservaStatus.EmAndamento ||
+                         r.Status == ReservaStatus.Validada))
+                    .Select(r => new
+                    {
+                        r.Data,
+                        DataFim = r.DataFim ?? r.Data,
+                        r.QuantidadePessoas
+                    })
+                    .ToListAsync();
+
+                for (var dia = inicioReserva; dia <= fimReserva; dia = dia.AddDays(1))
+                {
+                    var ocupacaoNoDia = reservasAtivasNoPeriodo
+                        .Where(r => r.Data <= dia && r.DataFim >= dia)
+                        .Sum(r => r.QuantidadePessoas);
+
+                    var ocupacaoComReativacao = ocupacaoNoDia + reserva.QuantidadePessoas;
+                    if (ocupacaoComReativacao > atrativo.CapacidadeMaxima)
+                    {
+                        return ServiceResult<bool>.Error(
+                            $"Reativação excede a capacidade do atrativo em {dia:dd/MM/yyyy}. Capacidade: {atrativo.CapacidadeMaxima}, ocupação projetada: {ocupacaoComReativacao}.");
+                    }
+                }
+            }
 
             // Se saiu de ativo para inativo, decrementar
             if (estavivoAntes && !estaAtivoAgora)
@@ -195,7 +240,7 @@ public class ReservaService : IReservaService
             }
 
             await tx.CommitAsync();
-            return true;
+            return ServiceResult<bool>.Ok(true);
         });
     }
     public async Task<ValidacaoResponse> ValidarTicketAsync(ValidacaoRequest request, Guid? operadorId)
